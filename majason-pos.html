@@ -812,6 +812,17 @@ function renderPOS() {
           </div>
         </div>
         <div class="cart-items" id="cart-items"><div style="color:var(--muted);font-size:11px;text-align:center;padding:16px">Tap a service to add</div></div>
+        <div style="padding:10px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#f5f5f3">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:600">+ Add Custom Item</div>
+          <div style="display:grid;grid-template-columns:1fr 50px;gap:6px">
+            <input id="custom-item-name" placeholder="Item name" style="padding:6px 8px;border-radius:5px;font-size:11px"/>
+            <input id="custom-item-qty" type="number" value="1" min="1" placeholder="Qty" style="padding:6px 8px;border-radius:5px;font-size:11px"/>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+            <input id="custom-item-price" type="number" placeholder="Price (KSh)" min="0" step="0.01" style="padding:6px 8px;border-radius:5px;font-size:11px"/>
+            <button class="btn btn-sm" style="background:var(--red);color:#fff;justify-content:center;border:none" onclick="addCustomItem()"><i class="ti ti-plus"></i> Add</button>
+          </div>
+        </div>
         <div class="cart-foot">
           <div class="cf-row"><span>Subtotal</span><span id="cf-sub">KSh 0</span></div>
           <div class="cf-row"><span>Discount</span><span id="cf-disc" style="color:var(--green)">- KSh 0</span></div>
@@ -866,6 +877,29 @@ function addToCart(id) {
   updateCartUI();
 }
 function removeCart(id) { cart = cart.filter(c => c.id !== id); updateCartUI(); }
+
+function addCustomItem() {
+  const name = document.getElementById('custom-item-name')?.value.trim();
+  const qty = Math.max(1, parseInt(document.getElementById('custom-item-qty')?.value) || 1);
+  const price = Math.max(0, parseFloat(document.getElementById('custom-item-price')?.value) || 0);
+  
+  if (!name) { alert('Please enter an item name.'); return; }
+  if (price <= 0) { alert('Please enter a valid price.'); return; }
+  
+  // Generate unique ID for custom item
+  const customId = 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const item = { id: customId, name, qty, price, desc: 'Custom item', dept: 'custom' };
+  
+  cart.push(item);
+  
+  // Clear inputs
+  document.getElementById('custom-item-name').value = '';
+  document.getElementById('custom-item-qty').value = '1';
+  document.getElementById('custom-item-price').value = '';
+  
+  updateCartUI();
+  document.getElementById('custom-item-name').focus();
+}
 
 function updateCartUI() {
   const el = document.getElementById('cart-items'); if (!el) return;
@@ -1133,12 +1167,12 @@ function buildInvoiceHTML(inv) {
         </tr>`).join('')}
       </tbody>
     </table>
-    <div class="invoice-totals">
+    <div class="invoice-totals" style="margin-bottom:24px;margin-top:20px">
       <div class="invoice-totals-left"></div>
-      <div class="invoice-totals-right">
-        <div class="invoice-totals-row"><div class="invoice-totals-label">Subtotal</div><div class="invoice-totals-value">${fmt(inv.subtotal)}</div></div>
-        ${inv.discountAmt > 0 ? `<div class="invoice-totals-row"><div class="invoice-totals-label">Discount (${inv.discountPct}%)</div><div class="invoice-totals-value">- ${fmt(inv.discountAmt)}</div></div>` : ''}
-        <div class="invoice-totals-row total"><div class="invoice-totals-label">Total Due</div><div class="invoice-totals-value">${fmt(inv.total)}</div></div>
+      <div class="invoice-totals-right" style="border:1px solid var(--border);border-radius:8px;padding:16px;background:#fafaf8">
+        <div class="invoice-totals-row" style="margin-bottom:10px"><div class="invoice-totals-label" style="color:var(--muted);font-size:12px">Subtotal</div><div class="invoice-totals-value" style="font-size:14px">${fmt(inv.subtotal)}</div></div>
+        ${inv.discountAmt > 0 ? `<div class="invoice-totals-row" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)"><div class="invoice-totals-label" style="color:var(--muted);font-size:12px">Discount (${inv.discountPct}%)</div><div class="invoice-totals-value" style="font-size:14px;color:var(--green)">- ${fmt(inv.discountAmt)}</div></div>` : `<div style="padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px"></div>`}
+        <div class="invoice-totals-row total" style="margin:0;padding-top:6px"><div class="invoice-totals-label" style="color:var(--text);font-size:14px;font-weight:600">Total Due</div><div class="invoice-totals-value" style="font-size:18px;font-weight:700;color:var(--red)">${fmt(inv.total)}</div></div>
       </div>
     </div>
     ${pays.length ? `<div class="invoice-payments">
@@ -1242,12 +1276,17 @@ function showInvoice(idOrInv) {
     ? `<button class="btn btn-sm btn-outline" onclick="sendInvoiceViaWhatsApp('${inv.id}','${inv.clientWhatsApp}')"><i class="ti ti-brand-whatsapp" style="color:#25d366"></i> WhatsApp</button>`
     : '';
 
+  const emailBtn = inv.clientEmail
+    ? `<button class="btn btn-sm btn-outline" onclick="sendInvoiceViaEmail('${inv.id}','${inv.clientEmail}','${inv.clientName}')"><i class="ti ti-mail" style="color:#ea4335"></i> Email</button>`
+    : '';
+
   document.getElementById('inv-modal-body').innerHTML =
     buildInvoiceHTML(inv) +
     payHistoryHTML +
     `<div style="margin-top:16px;display:flex;gap:8px;border-top:1px solid var(--border);padding-top:14px;flex-wrap:wrap">
       <button class="btn btn-red btn-sm" onclick="downloadInvoicePDF('${inv.id}')"><i class="ti ti-pdf"></i> Invoice PDF</button>
       <button class="btn btn-outline btn-sm" onclick="downloadReceiptPDF('${inv.id}')"><i class="ti ti-printer"></i> Receipt PDF</button>
+      ${emailBtn}
       ${waBtn}
       <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
       ${balance > 0 ? `<button class="btn btn-green btn-sm" onclick="openPaymentModal('${inv.id}')"><i class="ti ti-plus"></i> Record Payment</button>` : ''}
@@ -1283,13 +1322,45 @@ function openPaymentModal(invId) {
     <div style="display:grid;gap:10px">
       <div><label>Payment Amount (KSh) *</label><input type="number" id="pay-amount" placeholder="0" max="${balance}" value="${balance}" min="1"/></div>
       <div><label>Payment Method</label>
-        <select id="pay-method"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="bank">Bank Transfer</option></select>
+        <select id="pay-method" onchange="updatePaymentDetails()"><option value="cash">Cash</option><option value="mpesa">M-Pesa</option><option value="bank">Bank Transfer</option></select>
       </div>
+      <div id="payment-details-box"></div>
       <div><label>Note / Reference</label><input id="pay-note" placeholder="e.g. Balance, M-Pesa ref NKW1234…"/></div>
       <button class="btn btn-green" style="width:100%;justify-content:center" onclick="recordPayment('${invId}')"><i class="ti ti-check"></i> Save Payment</button>
     </div>`;
   closeModal('inv-modal');
   openModal('payment-modal');
+  setTimeout(updatePaymentDetails, 100);
+}
+
+function updatePaymentDetails() {
+  const method = document.getElementById('pay-method')?.value;
+  const detailsBox = document.getElementById('payment-details-box');
+  if (!detailsBox) return;
+  
+  if (method === 'mpesa') {
+    detailsBox.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:11px;color:#166534">
+      <strong>M-Pesa Payment Details:</strong><br/>
+      Paybill: <strong>522533</strong><br/>
+      Account: <strong>7616319</strong><br/>
+      <span style="color:var(--muted);font-size:10px">Customer enters amount on their phone and sends PIN.</span>
+    </div>`;
+  } else if (method === 'bank') {
+    detailsBox.innerHTML = `<div style="background:#dbeafe;border:1px solid #bfdbfe;border-radius:8px;padding:10px;font-size:11px;color:#1e40af">
+      <strong>Bank Transfer Details:</strong><br/>
+      Bank: <strong>KCB Bank</strong><br/>
+      Account Number: <strong>1310465029</strong><br/>
+      Account Name: <strong>Mejason Media Production</strong><br/>
+      <span style="color:var(--muted);font-size:10px;margin-top:4px;display:block">Please get confirmation from customer and enter reference below.</span>
+    </div>`;
+  } else if (method === 'cash') {
+    detailsBox.innerHTML = `<div style="background:#fff8f8;border:1px solid #fee2e2;border-radius:8px;padding:10px;font-size:11px;color:#991b1b">
+      <strong>Cash Payment:</strong><br/>
+      <span style="color:var(--muted);font-size:10px">Record the cash received amount above.</span>
+    </div>`;
+  } else {
+    detailsBox.innerHTML = '';
+  }
 }
 
 async function recordPayment(invId) {
@@ -1321,23 +1392,136 @@ async function markFullyPaid(id) {
 }
 
 // ── WHATSAPP ─────────────────────────────────────────────
-function sendInvoiceViaWhatsApp(invId, phone) {
+async function sendInvoiceViaWhatsApp(invId, phone) {
   const inv = invoices.find(i => i.id === invId);
   if (!inv || !phone) { alert('Invoice or phone number missing'); return; }
-  const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
-  const balance = inv.total - totalPaid;
-  const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
+  
+  // First, download the invoice PDF
+  const el = document.createElement('div');
+  el.innerHTML = buildInvoiceHTML(inv);
+  const fileName = `${inv.id}-invoice.pdf`;
+  
+  // Show status
+  const statusMsg = document.createElement('div');
+  statusMsg.textContent = '📄 Generating PDF...';
+  statusMsg.style.position = 'fixed';
+  statusMsg.style.top = '20px';
+  statusMsg.style.right = '20px';
+  statusMsg.style.background = '#fff';
+  statusMsg.style.padding = '12px 16px';
+  statusMsg.style.borderRadius = '8px';
+  statusMsg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+  statusMsg.style.zIndex = '10000';
+  document.body.appendChild(statusMsg);
+  
+  // Generate and download PDF
+  html2pdf().set({
+    margin: 10,
+    filename: fileName,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  }).from(el).save().then(() => {
+    statusMsg.textContent = '✓ PDF Downloaded: ' + fileName;
+    
+    const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
+    const balance = inv.total - totalPaid;
+    const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
 
-  const message = `📋 *Invoice from Mejason Media*\n\n`
-    + `*Invoice #* ${inv.id}\n*Date* ${inv.date}\n*Client* ${inv.clientName}\n\n*Items:*\n`
-    + inv.items.map(i => `• ${i.name} ×${i.qty} = ${fmt(i.price * i.qty)}`).join('\n')
-    + `\n\n*Subtotal* ${fmt(inv.subtotal)}\n`
-    + (inv.discountAmt > 0 ? `*Discount (${inv.discountPct}%)* -${fmt(inv.discountAmt)}\n` : '')
-    + `*Total Due* ${fmt(inv.total)}\n*Paid* ${fmt(totalPaid)}\n*Balance* ${fmt(balance)}\n`
-    + `\n*Status* ${statusLabel}\n\n📞 *Contact:* 0700864849\nThank you for your business! 🙏`;
+    const message = `📋 *MEJASON MEDIA - INVOICE*\n\n`
+      + `*Invoice #:* ${inv.id}\n*Date:* ${inv.date}\n*Client:* ${inv.clientName}\n\n`
+      + `*ITEMS:*\n`
+      + inv.items.map(i => `  • ${i.name} (×${i.qty}) = ${fmt(i.price * i.qty)}`).join('\n')
+      + `\n\n*SUMMARY:*\n`
+      + `  Subtotal: ${fmt(inv.subtotal)}\n`
+      + (inv.discountAmt > 0 ? `  Discount (-${inv.discountPct}%): ${fmt(inv.discountAmt)}\n` : '')
+      + `  *Total: ${fmt(inv.total)}*\n`
+      + `  Paid: ${fmt(totalPaid)}\n`
+      + `  Balance: ${fmt(balance)}\n\n`
+      + `*Status:* ${statusLabel}\n\n`
+      + `📎 *Invoice PDF attached above*\n\n`
+      + `📱 M-Pesa Till: 9013189\n`
+      + `🏦 Bank: KCB 1310465029\n`
+      + `📧 Email: mejasanw@gmail.com\n`
+      + `📞 Phone: 0700864849\n\n`
+      + `Thank you for choosing Mejason Media! 🙏`;
 
-  const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-  window.open(url, '_blank');
+    const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    
+    setTimeout(() => {
+      statusMsg.innerHTML = `✓ PDF Downloaded: <strong>${fileName}</strong><br/><br/>WhatsApp opened below.<br/><br/><span style="font-size:12px;color:#666">👉 Tap the attachment icon to add the downloaded PDF file to your message</span>`;
+      statusMsg.style.right = '20px';
+      statusMsg.style.maxWidth = '300px';
+      statusMsg.style.fontSize = '13px';
+      statusMsg.style.lineHeight = '1.5';
+      setTimeout(() => { statusMsg.remove(); }, 5000);
+    }, 500);
+  }).catch(err => {
+    console.error('PDF generation error:', err);
+    statusMsg.textContent = '❌ Error generating PDF';
+    setTimeout(() => { statusMsg.remove(); }, 3000);
+  });
+}
+
+// ── EMAIL ────────────────────────────────────────────────
+async function sendInvoiceViaEmail(invId, email, clientName) {
+  const inv = invoices.find(i => i.id === invId);
+  if (!inv || !email) { alert('Invoice or email address missing'); return; }
+  
+  // First, download the invoice PDF
+  const el = document.createElement('div');
+  el.innerHTML = buildInvoiceHTML(inv);
+  const fileName = `${inv.id}-invoice.pdf`;
+  
+  // Show status
+  const statusMsg = document.createElement('div');
+  statusMsg.textContent = '📄 Generating PDF...';
+  statusMsg.style.position = 'fixed';
+  statusMsg.style.top = '20px';
+  statusMsg.style.right = '20px';
+  statusMsg.style.background = '#fff';
+  statusMsg.style.padding = '12px 16px';
+  statusMsg.style.borderRadius = '8px';
+  statusMsg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+  statusMsg.style.zIndex = '10000';
+  document.body.appendChild(statusMsg);
+  
+  // Generate and download PDF
+  html2pdf().set({
+    margin: 10,
+    filename: fileName,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  }).from(el).save().then(() => {
+    const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
+    const balance = inv.total - totalPaid;
+    const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
+
+    const subject = `Invoice ${inv.id} from Mejason Media - ${statusLabel}`;
+    
+    const body = `Dear ${clientName},\n\nPlease find your invoice details below:\n\n📎 INVOICE PDF ATTACHED\n\nINVOICE INFORMATION\n─────────────────────────────────────\nInvoice #: ${inv.id}\nDate: ${inv.date}\nStatus: ${statusLabel}\n\nITEMS\n─────────────────────────────────────\n${inv.items.map(i => `${i.name} (×${i.qty}) ............ ${fmt(i.price * i.qty)}`).join('\n')}\n\nSUMMARY\n─────────────────────────────────────\nSubtotal: ${fmt(inv.subtotal)}\n${inv.discountAmt > 0 ? `Discount (${inv.discountPct}%): -${fmt(inv.discountAmt)}\n` : ''}Total Amount: ${fmt(inv.total)}\nAmount Paid: ${fmt(totalPaid)}\nBalance Due: ${fmt(balance)}\n\nPAYMENT METHODS\n─────────────────────────────────────\n📱 M-Pesa Till Number: 9013189\n🏦 Bank Transfer - KCB Bank\n   Account: 1310465029\n   Account Name: Mejason Media Production\n💳 Credit/Cheque (as agreed)\n\nCONTACT INFORMATION\n─────────────────────────────────────\nPhone: 0700864849 / 0768375441\nEmail: mejasanw@gmail.com\nTax ID: 0771400615\n\nThank you for choosing Mejason Media Production!\n\nBest regards,\nMejason Media Production Team\nKisumu, Kenya`;
+    
+    statusMsg.textContent = '✓ PDF Downloaded: ' + fileName;
+
+    // Use mailto protocol for email client
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+    
+    setTimeout(() => {
+      statusMsg.innerHTML = `✓ PDF Downloaded: <strong>${fileName}</strong><br/><br/>Email client opened below.<br/><br/><span style="font-size:12px;color:#666">👉 Click 'Attach Files' to add the downloaded PDF</span>`;
+      statusMsg.style.right = '20px';
+      statusMsg.style.maxWidth = '300px';
+      statusMsg.style.fontSize = '13px';
+      statusMsg.style.lineHeight = '1.5';
+      setTimeout(() => { statusMsg.remove(); }, 5000);
+    }, 500);
+  }).catch(err => {
+    console.error('PDF generation error:', err);
+    statusMsg.textContent = '❌ Error generating PDF';
+    setTimeout(() => { statusMsg.remove(); }, 3000);
+  });
 }
 
 // ── INVOICES PAGE ────────────────────────────────────────
@@ -1715,6 +1899,18 @@ function renderSettings() {
           <div><label>Till Number</label><input value="9013189"/></div>
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;font-size:11px;color:#166534">
             <i class="ti ti-info-circle"></i> STK Push is simulated in demo mode. Integrate Safaricom Daraja API for live payments.
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-building-bank" style="color:#2563eb"></i> Bank Settings</div>
+        <div style="display:grid;gap:10px">
+          <div><label>Bank Name</label><input value="KCB Bank" placeholder="e.g. KCB Bank"/></div>
+          <div><label>Account Number</label><input value="1310465029" placeholder="e.g. 1310465029"/></div>
+          <div><label>Account Holder</label><input value="Mejason Media Production" placeholder="Account holder name"/></div>
+          <div><label>Branch</label><input value="Kisumu" placeholder="e.g. Kisumu"/></div>
+          <div style="background:#dbeafe;border:1px solid #bfdbfe;border-radius:8px;padding:10px;font-size:11px;color:#1e40af">
+            <i class="ti ti-info-circle"></i> Bank details will appear on invoices and receipts. Customers can use these for bank transfers.
           </div>
         </div>
       </div>
