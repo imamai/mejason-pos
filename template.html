@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Arial', sans-serif; color: #333; line-height: 1.4; padding: 20px; }
+    .header { display: flex; align-items: center; border-bottom: 2px solid #ff0000; padding-bottom: 10px; margin-bottom: 20px; }
+    .logo { height: 60px; } /* Reference: mejason-logo.png */
+    .company-name { color: #000; font-weight: bold; font-size: 24px; margin-left: 15px; }
+    .red-text { color: #ff0000; }
+    h1 { font-size: 18px; text-align: center; text-transform: uppercase; margin-top: 30px; }
+    .section-title { background-color: #f2f2f2; font-weight: bold; padding: 5px; margin-top: 15px; border-left: 5px solid #ff0000; }
+    .field { margin: 10px 0; border-bottom: 1px dotted #ccc; }
+    .footer { margin-top: 50px; text-align: center; font-style: italic; color: #555; border-top: 1px solid #ff0000; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <!-- The script will inject the mejason-logo.png here -->
+    <div class="company-name">mejasan <br><span class="red-text" style="font-size: 14px;">Media Production</span></div>
+  </div>
+
+  <h1><?= docTitle ?></h1>
+
+  <div class="section-title">1. EVENT OVERVIEW & LOGISTICS</div>
+  <div class="field"><b>Client Name:</b> <?= clientName ?></div>
+  <div class="field"><b>Event Date:</b> <?= eventDate ?></div>
+  <div class="field"><b>Venue:</b> <?= venue ?></div>
+
+  <div class="section-title">CONTRACT TERMS</div>
+  <p><?= contractBody ?></p>
+
+  <div class="footer">"We Deliver Quality"</div>
+</body>
+</html>

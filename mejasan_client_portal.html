@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mejasan Media Production – Client Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #fafaf7;
+    --cream: #f4f0e8;
+    /* CHANGED THESE TO RED */
+    --gold: #e60000;       /* Primary Red from your logo */
+    --gold-light: #ff3333; /* A lighter hover state red */
+    --red: #c0392b;
+    --muted: #6b6560;
+    --border: #ddd8ce;
+    --section-bg: #ffffff;
+    --input-bg: #fdfcf9;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--black);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: var(--black);
+    color: var(--white);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #222;
+  }
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo { display: flex; flex-direction: column; gap: 1px; }
+  .logo-main {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .logo-sub { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; font-weight: 300; }
+  .header-tagline { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #666; font-style: italic; }
+
+  /* HERO BAND */
+  .hero {
+    background: var(--black);
+    color: var(--white);
+    text-align: center;
+    padding: 64px 28px 56px;
+    border-bottom: 2px solid var(--gold);
+  }
+  .hero h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(34px, 6vw, 54px); font-weight: 300; letter-spacing: 0.04em; line-height: 1.2; margin-bottom: 14px; }
+  .hero h1 em { color: var(--gold); font-style: italic; }
+  .hero p { font-size: 14px; color: #aaa; max-width: 520px; margin: 0 auto; letter-spacing: 0.02em; line-height: 1.7; }
+
+  /* PROGRESS NAV */
+  .progress-nav {
+    background: var(--black);
+    padding: 0 28px 28px;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+  }
+  .nav-step { display: flex; align-items: center; gap: 0; cursor: pointer; background: none; border: none; padding: 0; }
+  .nav-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 18px; border-radius: 40px;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.25s; color: #666; font-weight: 400; cursor: pointer;
+  }
+  .nav-pill.active { background: var(--gold); color: var(--black); font-weight: 500; }
+  .nav-pill:hover:not(.active) { color: var(--gold-light); }
+  .nav-num {
+    width: 20px; height: 20px; border-radius: 50%; background: #333;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 500; flex-shrink: 0; transition: all 0.25s;
+  }
+  .nav-pill.active .nav-num { background: var(--black); color: var(--gold); }
+  .nav-pill.done .nav-num { background: #2d6a2d; color: #fff; }
+  .nav-pill.done { color: #7fb87f; }
+  .nav-sep { width: 32px; height: 1px; background: #333; flex-shrink: 0; align-self: center; }
+
+  /* MAIN */
+  .main { max-width: 900px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* TABS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SECTION CARD */
+  .section-card {
+    background: var(--section-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section-header {
+    background: var(--black); color: var(--white);
+    padding: 16px 28px; display: flex; align-items: center; gap: 14px;
+  }
+  .section-num { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: var(--gold); line-height: 1; min-width: 28px; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
+  .section-body { padding: 28px; }
+
+  /* FORM FIELDS */
+  .field { margin-bottom: 22px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 7px; }
+  .field label .req { color: var(--gold); margin-left: 2px; }
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="tel"],
+  .field input[type="date"],
+  .field input[type="time"],
+  .field textarea,
+  .field select {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 2px;
+    background: var(--input-bg); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--black);
+    transition: border-color 0.2s, box-shadow 0.2s; appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  }
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 580px) { .field-row, .field-row-3 { grid-template-columns: 1fr; } }
+  .hint { font-size: 11px; color: #aaa; margin-top: 5px; font-style: italic; }
+
+  /* RADIO / CHECKBOX */
+  .radio-group, .check-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .radio-opt, .check-opt {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: 2px;
+    cursor: pointer; transition: all 0.2s; font-size: 13px;
+    background: var(--input-bg); user-select: none;
+  }
+  .radio-opt:hover, .check-opt:hover { border-color: var(--gold); background: #fffef9; }
+  .radio-opt input, .check-opt input { accent-color: var(--gold); }
+  .radio-opt.selected, .check-opt.selected { border-color: var(--gold); background: #fffbee; }
+
+  /* TIMELINE TABLE */
+  .timeline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* FAMILY GROUPS */
+  .family-entries { display: flex; flex-direction: column; gap: 10px; }
+  .family-entry { display: flex; gap: 8px; align-items: center; }
+  .family-entry input { flex: 1; }
+  .btn-remove {
+    width: 32px; height: 32px; border: 1px solid #eee; border-radius: 2px;
+    background: none; color: #ccc; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .btn-remove:hover { border-color: #ffaaaa; color: #c0392b; background: #fff5f5; }
+  .btn-add-row {
+    margin-top: 10px; padding: 9px 18px; border: 1px dashed var(--gold);
+    border-radius: 2px; background: none; color: var(--gold);
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; width: 100%;
+  }
+  .btn-add-row:hover { background: #fffbee; }
+
+  /* CONSENT BLOCK */
+  .consent-block { border: 1px solid var(--border); border-radius: 2px; padding: 20px; background: var(--cream); margin-top: 8px; }
+  .consent-option {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 10px;
+    border: 1px solid var(--border); border-radius: 2px; background: var(--section-bg);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .consent-option:last-child { margin-bottom: 0; }
+  .consent-option:hover { border-color: var(--gold); }
+  .consent-option input[type="radio"] { margin-top: 3px; accent-color: var(--gold); flex-shrink: 0; }
+  .consent-option-text strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .consent-option-text span { font-size: 12px; color: var(--muted); }
+
+  /* NAV BUTTONS */
+  .form-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 13px 32px; border-radius: 2px; font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 500; cursor: pointer; transition: all 0.2s; border: none;
+  }
+  .btn-primary { background: var(--gold); color: var(--black); }
+  .btn-primary:hover { background: #b8943e; }
+  .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--black); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #a93226; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* CONTRACT TAB */
+  .contract-header {
+    text-align: center; padding: 48px 28px 32px;
+    background: var(--section-bg); border: 1px solid var(--border);
+    border-radius: 4px; margin-bottom: 24px;
+  }
+  .contract-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .contract-header p { font-size: 13px; color: var(--muted); max-width: 480px; margin: 0 auto; }
+  .contract-meta { background: var(--section-bg); border: 1px solid var(--border); border-radius: 4px; padding: 28px; margin-bottom: 24px; }
+  .contract-meta h3 { font-family: 'Cormorant Garamond', serif; font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .contract-body { background: var(--section-bg); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 24px; }
+  .contract-body h3 { background: var(--black); color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; padding: 14px 28px; font-weight: 400; }
+  .contract-clauses { padding: 28px; }
+  .clause { margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px solid #f0ece4; }
+  .clause:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .clause-title { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .clause p { font-size: 14px; line-height: 1.75; color: #3a3a3a; }
+
+  /* SIGNATURE */
+  .signature-block { background: var(--section-bg); border: 1px solid var(--gold); border-radius: 4px; padding: 32px 28px; margin-bottom: 24px; }
+  .signature-block h3 { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400; margin-bottom: 20px; letter-spacing: 0.06em; }
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 580px) { .sig-grid { grid-template-columns: 1fr; } }
+  .sig-party h4 { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; font-weight: 500; }
+  .sig-canvas-wrap {
+    border: 1px solid var(--border); border-radius: 2px; background: var(--input-bg);
+    position: relative; height: 100px; overflow: hidden; margin-bottom: 10px;
+  }
+  .sig-canvas-wrap canvas { width: 100%; height: 100%; cursor: crosshair; display: block; touch-action: none; }
+  .sig-hint {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 12px; color: #ccc; pointer-events: none; transition: opacity 0.3s;
+    font-style: italic; white-space: nowrap;
+  }
+  .btn-clear-sig {
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 2px; background: none;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  .btn-clear-sig:hover { border-color: var(--red); color: var(--red); }
+
+  /* INTERVIEW TAB */
+  .interview-card { background: var(--section-bg); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 20px; animation: fadeUp 0.4s ease both; }
+  .interview-card-header { background: var(--black); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+  .interview-card-header h3 { font-family: 'Cormorant Garamond', serif; font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); font-weight: 400; }
+  .interview-card-body { padding: 24px; }
+  .interview-q { font-size: 13px; color: #444; padding: 10px 0; border-bottom: 1px solid #f4f0e8; display: flex; gap: 10px; line-height: 1.6; }
+  .interview-q:last-child { border-bottom: none; }
+  .interview-q .qnum { font-size: 11px; color: var(--gold); font-weight: 500; min-width: 18px; padding-top: 1px; }
+  .guide-note { background: #fffbee; border: 1px solid var(--gold-light); border-radius: 4px; padding: 18px 22px; margin-bottom: 24px; font-size: 13px; color: #5a4a20; line-height: 1.7; display: flex; gap: 12px; align-items: flex-start; }
+  .guide-note .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* SUBMIT / SUCCESS */
+  .submit-section { text-align: center; padding: 40px 28px; background: var(--section-bg); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 24px; }
+  .submit-section h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; margin-bottom: 10px; }
+  .submit-section p { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.7; }
+
+  /* LOADING OVERLAY */
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(10,10,10,0.7); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 18px; }
+  .loading-overlay.visible { display: flex; }
+  .loading-spinner { width: 48px; height: 48px; border: 3px solid #333; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--gold-light); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
+
+  .success-screen { display: none; text-align: center; padding: 64px 28px; background: var(--section-bg); border: 1px solid var(--border); border-radius: 4px; }
+  .success-screen.visible { display: block; }
+  .success-icon { width: 64px; height: 64px; border-radius: 50%; background: #eaf6ea; border: 2px solid #7fbd7f; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; }
+  .success-screen h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; margin-bottom: 10px; }
+  .success-screen p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  /* ERROR BANNER */
+  .error-banner { display: none; background: #fff0f0; border: 1px solid #f5c6c6; border-radius: 4px; padding: 14px 20px; margin-bottom: 16px; font-size: 13px; color: #8b2020; line-height: 1.6; }
+  .error-banner.visible { display: block; }
+
+  /* FOOTER */
+  .site-footer { background: var(--black); color: #555; text-align: center; padding: 24px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; border-top: 1px solid #222; }
+  .site-footer span { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Submitting your booking…</div>
+</div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <img src="mejason-logo.png" alt="Mejasan Media Production" style="height:48px; width:auto; display:block; mix-blend-mode: screen; filter: contrast(120%);"/>
+    </div>
+    <div class="header-tagline">We Deliver Quality</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Your Wedding,<br/><em>Beautifully</em> Planned</h1>
+  <p>Complete your wedding media planning questionnaire, review the morning interview guide, and sign your contract — all in one place.</p>
+</div>
+
+<!-- PROGRESS NAV -->
+<div class="progress-nav">
+  <button class="nav-step" onclick="goTab(0)">
+    <div class="nav-pill active" id="np0"><span class="nav-num">1</span>Questionnaire</div>
+  </button>
+  <div class="nav-sep"></div>
+  <button class="nav-step" onclick="goTab(1)">
+    <div class="nav-pill" id="np1"><span class="nav-num">2</span>Interview Guide</div>
+  </button>
+  <div class="nav-sep"></div>
+  <button class="nav-step" onclick="goTab(2)">
+    <div class="nav-pill" id="np2"><span class="nav-num">3</span>Contract</div>
+  </button>
+</div>
+
+<main class="main">
+
+  <!-- ======= TAB 1: QUESTIONNAIRE ======= -->
+  <div class="tab-panel active" id="tab0">
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">1</div><div class="section-title">Event Overview &amp; Logistics</div></div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field"><label>Bride's Full Name <span class="req">*</span></label><input type="text" placeholder="e.g. Amina Wanjiku Kamau" id="bride-name"/></div>
+          <div class="field"><label>Groom's Full Name <span class="req">*</span></label><input type="text" placeholder="e.g. David Otieno Mwangi" id="groom-name"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Wedding Date(s) <span class="req">*</span></label><input type="date" id="wedding-date"/></div>
+          <div class="field"><label>Wedding Theme Color(s)</label><input type="text" placeholder="e.g. Ivory, Gold, Dusty Rose" id="theme-colors"/></div>
+        </div>
+        <div class="field">
+          <label>Overall Wedding Theme / Concept</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="theme" value="Rustic"/> Rustic</label>
+            <label class="radio-opt"><input type="radio" name="theme" value="Royal"/> Royal</label>
+            <label class="radio-opt"><input type="radio" name="theme" value="Modern"/> Modern</label>
+            <label class="radio-opt"><input type="radio" name="theme" value="Garden"/> Garden</label>
+            <label class="radio-opt"><input type="radio" name="theme" value="Traditional"/> Traditional</label>
+            <label class="radio-opt"><input type="radio" name="theme" value="Other"/> Other</label>
+          </div>
+        </div>
+        <div class="field"><label>Bride Preparation Location <span class="req">*</span></label><input type="text" placeholder="Venue name, exact address or GPS link" id="bride-prep-location"/></div>
+        <div class="field"><label>Groom Preparation Location <span class="req">*</span></label><input type="text" placeholder="Venue name, exact address or GPS link" id="groom-prep-location"/></div>
+        <div class="field-row">
+          <div class="field"><label>Ceremony Venue <span class="req">*</span></label><input type="text" placeholder="Name &amp; Location" id="ceremony-venue"/></div>
+          <div class="field"><label>Reception Venue <span class="req">*</span></label><input type="text" placeholder="Name &amp; Location" id="reception-venue"/></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">2</div><div class="section-title">Wedding Day Timeline</div></div>
+      <div class="section-body">
+        <div class="timeline-grid">
+          <div class="field"><label>Bride Prep Start Time</label><input type="time" id="bride-prep-time"/></div>
+          <div class="field"><label>Groom Prep Start Time</label><input type="time" id="groom-prep-time"/></div>
+          <div class="field"><label>Ceremony Start Time</label><input type="time" id="ceremony-time"/></div>
+          <div class="field"><label>Reception Start Time</label><input type="time" id="reception-time"/></div>
+          <div class="field"><label>Expected End Time</label><input type="time" id="end-time"/></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">3</div><div class="section-title">Creative Direction &amp; Style Preferences</div></div>
+      <div class="section-body">
+        <div class="field">
+          <label>Photography Style <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="photo-style" value="Documentary"/> Documentary</label>
+            <label class="radio-opt"><input type="radio" name="photo-style" value="Editorial"/> Editorial</label>
+            <label class="radio-opt"><input type="radio" name="photo-style" value="Traditional"/> Traditional</label>
+            <label class="radio-opt"><input type="radio" name="photo-style" value="Luxury"/> Luxury</label>
+            <label class="radio-opt"><input type="radio" name="photo-style" value="Mix"/> Mix</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Video Style <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="video-style" value="Cinematic"/> Cinematic</label>
+            <label class="radio-opt"><input type="radio" name="video-style" value="Fun &amp; Upbeat"/> Fun &amp; Upbeat</label>
+            <label class="radio-opt"><input type="radio" name="video-style" value="Emotional"/> Emotional</label>
+            <label class="radio-opt"><input type="radio" name="video-style" value="Dramatic"/> Dramatic</label>
+            <label class="radio-opt"><input type="radio" name="video-style" value="Mix"/> Mix</label>
+          </div>
+        </div>
+        <div class="field"><label>Reference photos or videos you love?</label><textarea placeholder="Share links, describe looks, or mention photographers whose work you admire..." id="style-references"></textarea><div class="hint">You can also email references to us separately.</div></div>
+        <div class="field"><label>Styles or shots you DO NOT want?</label><textarea placeholder="e.g. No posed formal shots, avoid flash in church..." id="style-avoid"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">4</div><div class="section-title">Key People &amp; Priority Coverage</div></div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field"><label>Bride's Parents' Names</label><input type="text" placeholder="Mother &amp; Father full names" id="bride-parents"/></div>
+          <div class="field"><label>Groom's Parents' Names</label><input type="text" placeholder="Mother &amp; Father full names" id="groom-parents"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Best Man</label><input type="text" placeholder="Full name" id="best-man"/></div>
+          <div class="field"><label>Maid of Honour</label><input type="text" placeholder="Full name" id="maid-of-honour"/></div>
+        </div>
+        <div class="field"><label>VIP Guests / Special Dignitaries</label><textarea placeholder="Names and titles of any dignitaries, high-profile guests who need priority coverage..." id="vip-guests"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">5</div><div class="section-title">Family Photo Groupings Required</div></div>
+      <div class="section-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">List the specific family combinations you need photographed.</p>
+        <div class="family-entries" id="family-list">
+          <div class="family-entry"><input type="text" placeholder="Group combination..." class="family-group-input"/><button class="btn-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+          <div class="family-entry"><input type="text" placeholder="Group combination..." class="family-group-input"/><button class="btn-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+          <div class="family-entry"><input type="text" placeholder="Group combination..." class="family-group-input"/><button class="btn-remove" onclick="removeRow(this)" title="Remove">×</button></div>
+        </div>
+        <button class="btn-add-row" onclick="addFamilyRow()">+ Add another grouping</button>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">6</div><div class="section-title">Deliverables &amp; Package Details</div></div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Preferred Highlight Video Length</label>
+            <select id="highlight-length">
+              <option value="">Select length</option>
+              <option>3–5 minutes</option><option>5–8 minutes</option>
+              <option>8–12 minutes</option><option>12–20 minutes</option><option>No preference</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Full Documentary Edit Required?</label>
+            <div class="radio-group" style="margin-top:6px;">
+              <label class="radio-opt"><input type="radio" name="docu" value="Yes"/> Yes</label>
+              <label class="radio-opt"><input type="radio" name="docu" value="No"/> No</label>
+              <label class="radio-opt"><input type="radio" name="docu" value="Discuss later"/> Discuss later</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">7</div><div class="section-title">Audio &amp; Technical Coordination</div></div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>PA System Available?</label>
+            <div class="radio-group" style="margin-top:6px;">
+              <label class="radio-opt"><input type="radio" name="pa" value="Yes"/> Yes</label>
+              <label class="radio-opt"><input type="radio" name="pa" value="No"/> No</label>
+              <label class="radio-opt"><input type="radio" name="pa" value="Not sure"/> Not sure</label>
+            </div>
+          </div>
+          <div class="field"><label>Sound System Contact</label><input type="text" placeholder="Name &amp; phone number" id="sound-contact"/></div>
+        </div>
+        <div class="field"><label>Live Performances or Surprise Presentations?</label><textarea placeholder="Describe any live performances, surprise speeches, flash mobs, etc..." id="live-performances"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">8</div><div class="section-title">Coordination Contacts</div></div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field"><label>Wedding Planner – Name</label><input type="text" placeholder="Full name" id="planner-name"/></div>
+          <div class="field"><label>Wedding Planner – Contact</label><input type="tel" placeholder="+254 7XX XXX XXX" id="planner-contact"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>MC – Name</label><input type="text" placeholder="Full name" id="mc-name"/></div>
+          <div class="field"><label>MC – Contact</label><input type="tel" placeholder="+254 7XX XXX XXX" id="mc-contact"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Church Coordinator – Name</label><input type="text" placeholder="Full name" id="church-coord-name"/></div>
+          <div class="field"><label>Church Coordinator – Contact</label><input type="tel" placeholder="+254 7XX XXX XXX" id="church-coord-contact"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Reception Venue Manager – Name</label><input type="text" placeholder="Full name" id="venue-manager-name"/></div>
+          <div class="field"><label>Reception Venue Manager – Contact</label><input type="tel" placeholder="+254 7XX XXX XXX" id="venue-manager-contact"/></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">9</div><div class="section-title">Your Love Story</div></div>
+      <div class="section-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px;font-style:italic;">For your cinematic highlight film — share as much or as little as you're comfortable with.</p>
+        <div class="field"><label>How did you meet?</label><textarea placeholder="Tell us your story..." style="min-height:100px;" id="how-you-met"></textarea></div>
+        <div class="field"><label>Proposal Story</label><textarea placeholder="How did it happen?" id="proposal-story"></textarea></div>
+        <div class="field"><label>Special Songs or Meaningful Quotes</label><input type="text" placeholder="Your song, a quote that means something to you both..." id="special-songs"/></div>
+        <div class="field"><label>Any Surprises Planned During the Wedding?</label><textarea placeholder="Flash mob? Special guest? A gift reveal? (We'll keep it secret!)" id="surprises"></textarea></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header"><div class="section-num">10</div><div class="section-title">Agreement Confirmation</div></div>
+      <div class="section-body">
+        <div class="field"><label>Selected Package</label><input type="text" placeholder="e.g. Premium Full-Day Coverage" id="selected-package"/></div>
+        <div class="field"><label>Additional Services Requested</label><textarea placeholder="Any extras not in your package..." id="additional-services"></textarea></div>
+        <div class="field">
+          <label>Preferred Delivery Timeline</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="delivery" value="Within 4 weeks"/> Within 4 weeks</label>
+            <label class="radio-opt"><input type="radio" name="delivery" value="Within 6 weeks"/> Within 6 weeks</label>
+            <label class="radio-opt"><input type="radio" name="delivery" value="Within 8 weeks"/> Within 8 weeks</label>
+            <label class="radio-opt"><input type="radio" name="delivery" value="Flexible"/> Flexible</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Client Email Address <span class="req">*</span></label>
+          <input type="email" placeholder="your@email.com" id="client-email"/>
+          <div class="hint">We'll send you a copy of your responses.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-nav">
+      <span style="font-size:12px;color:var(--muted);">Fields marked <span style="color:var(--gold);">*</span> are required</span>
+      <button class="btn btn-primary" onclick="goTab(1)">Continue to Interview Guide →</button>
+    </div>
+  </div>
+
+  <!-- ======= TAB 2: INTERVIEW GUIDE ======= -->
+  <div class="tab-panel" id="tab1">
+    <div class="guide-note">
+      <div class="icon">📋</div>
+      <div>
+        <strong style="display:block;margin-bottom:4px;">For Mejasan's crew – Morning Interview Guide</strong>
+        This guide is used on the morning of the wedding. Share this page with your client the evening before — they read and reflect on the questions privately, then speak from the heart during the filmed interview. No written answers needed.
+      </div>
+    </div>
+    <div class="interview-card">
+      <div class="interview-card-header"><h3>Introduction</h3></div>
+      <div class="interview-card-body">
+        <div class="interview-q"><span class="qnum">01</span><span>Please introduce yourself — what is your full name?</span></div>
+        <div class="interview-q"><span class="qnum">02</span><span>What is today's date?</span></div>
+        <div class="interview-q"><span class="qnum">03</span><span>What is happening today?</span></div>
+      </div>
+    </div>
+    <div class="interview-card">
+      <div class="interview-card-header"><h3>About Your Partner</h3></div>
+      <div class="interview-card-body">
+        <div class="interview-q"><span class="qnum">01</span><span>Who are you marrying today?</span></div>
+        <div class="interview-q"><span class="qnum">02</span><span>In a few words, how would you describe them?</span></div>
+        <div class="interview-q"><span class="qnum">03</span><span>What is the best thing about them?</span></div>
+        <div class="interview-q"><span class="qnum">04</span><span>What quality made you certain they are the one?</span></div>
+      </div>
+    </div>
+    <div class="interview-card">
+      <div class="interview-card-header"><h3>Expectations for the Day</h3></div>
+      <div class="interview-card-body">
+        <div class="interview-q"><span class="qnum">01</span><span>How are you feeling this morning?</span></div>
+        <div class="interview-q"><span class="qnum">02</span><span>What are your expectations for today?</span></div>
+        <div class="interview-q"><span class="qnum">03</span><span>What would make today perfect for you?</span></div>
+      </div>
+    </div>
+    <div class="interview-card">
+      <div class="interview-card-header"><h3>The Moment You Are Waiting For</h3></div>
+      <div class="interview-card-body">
+        <div class="interview-q"><span class="qnum">01</span><span>What moment are you most looking forward to?</span></div>
+        <div class="interview-q"><span class="qnum">02</span><span>Why is that moment special to you?</span></div>
+      </div>
+    </div>
+    <div class="interview-card">
+      <div class="interview-card-header"><h3>Direct Message to Your Lover</h3></div>
+      <div class="interview-card-body">
+        <div class="interview-q"><span class="qnum">01</span><span>If your partner was watching this right now, what would you say to them?</span></div>
+        <div class="interview-q"><span class="qnum">02</span><span>What promise are you making to them today?</span></div>
+        <div class="interview-q"><span class="qnum">03</span><span>Why do you choose them — today and always?</span></div>
+      </div>
+    </div>
+    <div class="interview-card">
+      <div class="interview-card-header"><h3>Gratitude</h3></div>
+      <div class="interview-card-body">
+        <div class="interview-q"><span class="qnum">01</span><span>Who would you like to thank as you begin this new chapter?</span></div>
+        <div class="interview-q"><span class="qnum">02</span><span>What would you like to say to your parents?</span></div>
+        <div class="interview-q"><span class="qnum">03</span><span>What would you like to say to your friends and everyone who stood by you?</span></div>
+        <div class="interview-q"><span class="qnum">04</span><span>What does their support mean to you?</span></div>
+      </div>
+    </div>
+    <div style="background:#fffbee;border:1px solid var(--gold-light);border-radius:4px;padding:20px 24px;margin-bottom:8px;font-size:13px;color:#5a4a20;text-align:center;line-height:1.8;">
+      <em>"Kindly reflect deeply and speak from the heart during your interview.<br/>There are no right or wrong answers — authenticity is what makes your story powerful."</em><br/>
+      <strong style="display:block;margin-top:8px;font-size:12px;letter-spacing:0.1em;">— Mejasan Media Production</strong>
+    </div>
+    <div class="form-nav">
+      <button class="btn btn-ghost" onclick="goTab(0)">← Back to Questionnaire</button>
+      <button class="btn btn-primary" onclick="goTab(2)">Continue to Contract →</button>
+    </div>
+  </div>
+
+  <!-- ======= TAB 3: CONTRACT ======= -->
+  <div class="tab-panel" id="tab2">
+
+    <div class="contract-header">
+      <h2>Wedding Videography &amp; Photography Contract</h2>
+      <p>Please fill in the event details below, read all terms carefully, and sign at the bottom to confirm your booking with Mejasan Media Production.</p>
+    </div>
+
+    <div class="contract-meta">
+      <h3>Event Details</h3>
+      <div class="field-row">
+        <div class="field"><label>Event Name / Type</label><input type="text" placeholder="e.g. Wedding" value="Wedding" id="contract-event-type"/></div>
+        <div class="field"><label>Event Date <span class="req">*</span></label><input type="date" id="contract-date"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Location <span class="req">*</span></label><input type="text" placeholder="City / Venue name" id="contract-location"/></div>
+        <div class="field"><label>Total Cost (KES) <span class="req">*</span></label><input type="text" placeholder="e.g. 150,000" id="contract-cost"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Client Full Name <span class="req">*</span></label><input type="text" placeholder="As it should appear on the contract" id="contract-client"/></div>
+        <div class="field"><label>Client Contact / Phone <span class="req">*</span></label><input type="tel" placeholder="+254 7XX XXX XXX" id="contract-phone"/></div>
+      </div>
+    </div>
+
+    <div class="contract-body">
+      <h3>Terms &amp; Conditions</h3>
+      <div class="contract-clauses">
+        <div class="clause"><div class="clause-title">Entire Agreement</div><p>This contract represents the full understanding between Mejasan Media Production (the Company) and the Client for photography and videography services. Any changes must be made in writing and signed by both parties.</p></div>
+        <div class="clause"><div class="clause-title">Booking &amp; Payments</div><p>A 75% deposit secures your booking. The remaining 25% is due before delivery of the final products. In case of cancellation, 15% of the deposit is non-refundable. Any other costs already incurred must also be covered.</p></div>
+        <div class="clause"><div class="clause-title">Schedule &amp; Timing</div><p>The Client agrees to confirm the event schedule at least one week in advance. Shooting starts and ends at the agreed times. If there is a delay, coverage ends as scheduled unless extended — extra charges may apply.</p></div>
+        <div class="clause"><div class="clause-title">Travel &amp; Logistics</div><p>Travel, accommodation, or transport costs may apply based on the event location. These will be communicated in advance.</p></div>
+        <div class="clause"><div class="clause-title">Responsibilities &amp; Limitations</div><p>The Company is not liable for issues beyond its control (e.g. guest interference, weather, venue restrictions, or delays). The Client is responsible for acquiring any necessary permits or permissions.</p></div>
+        <div class="clause"><div class="clause-title">Safety</div><p>The Company reserves the right to stop coverage if its crew experiences inappropriate or unsafe behaviour. This is to ensure safety for all involved.</p></div>
+        <div class="clause"><div class="clause-title">Image Editing &amp; Delivery</div><p>The Company will select and edit the best images. Delivery will be completed within two months after the event, assuming full payment. Physical items should be collected within this period. A 1% monthly charge will apply for uncollected items after two months.</p></div>
+        <div class="clause"><div class="clause-title">Unforeseen Circumstances</div><p>If the Company is unable to perform due to illness, equipment failure, or unforeseen events, efforts will be made to find a replacement. If not possible, liability is limited to a refund of payments made.</p></div>
+        <div class="clause">
+          <div class="clause-title">Copyright &amp; Consent to Share</div>
+          <p>Upon final delivery, the Client holds full usage rights. The Company may share select content for promotional purposes. Please indicate your preference below:</p>
+          <div class="consent-block" style="margin-top:14px;">
+            <label class="consent-option">
+              <input type="radio" name="consent" value="Yes – I give permission" id="consent-yes"/>
+              <div class="consent-option-text">
+                <strong>✓ Yes — I give permission</strong>
+                <span>Mejasan Media Production may use selected content from my event for promotional purposes (website, social media, portfolio).</span>
+              </div>
+            </label>
+            <label class="consent-option">
+              <input type="radio" name="consent" value="No – Keep my content private" id="consent-no"/>
+              <div class="consent-option-text">
+                <strong>✕ No — Keep my content private</strong>
+                <span>I prefer my content remain private and not be shared publicly.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="signature-block">
+      <h3>Signatures — Agreement Confirmation</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:24px;">By signing below, both parties agree to all terms and conditions stated in this contract.</p>
+      <div class="sig-grid">
+        <div class="sig-party">
+          <h4>Client Signature</h4>
+          <div class="sig-canvas-wrap"><canvas id="sig-client" width="400" height="100"></canvas><div class="sig-hint" id="hint-client">Draw your signature here</div></div>
+          <div class="field" style="margin-bottom:8px;"><input type="text" placeholder="Print full name" style="font-size:13px;" id="sig-client-name"/></div>
+          <div class="field" style="margin-bottom:8px;"><input type="date" style="font-size:13px;" id="sig-client-date"/></div>
+          <button class="btn-clear-sig" onclick="clearSig('sig-client','hint-client')">Clear</button>
+        </div>
+        <div class="sig-party">
+          <h4>Witness Signature (Client Side)</h4>
+          <div class="sig-canvas-wrap"><canvas id="sig-witness" width="400" height="100"></canvas><div class="sig-hint" id="hint-witness">Draw witness signature here</div></div>
+          <div class="field" style="margin-bottom:8px;"><input type="text" placeholder="Witness full name" style="font-size:13px;" id="sig-witness-name"/></div>
+          <div class="field" style="margin-bottom:8px;"><input type="date" style="font-size:13px;" id="sig-witness-date"/></div>
+          <button class="btn-clear-sig" onclick="clearSig('sig-witness','hint-witness')">Clear</button>
+        </div>
+        <div class="sig-party">
+          <h4>Company Representative</h4>
+          <div class="sig-canvas-wrap"><canvas id="sig-company" width="400" height="100"></canvas><div class="sig-hint" id="hint-company">Company rep signature</div></div>
+          <div class="field" style="margin-bottom:8px;"><input type="text" placeholder="Rep full name" value="Mejasan Media Production" style="font-size:13px;" id="sig-company-name"/></div>
+          <div class="field" style="margin-bottom:8px;"><input type="date" style="font-size:13px;" id="sig-company-date"/></div>
+          <button class="btn-clear-sig" onclick="clearSig('sig-company','hint-company')">Clear</button>
+        </div>
+        <div class="sig-party">
+          <h4>Witness Signature (Company Side)</h4>
+          <div class="sig-canvas-wrap"><canvas id="sig-compwit" width="400" height="100"></canvas><div class="sig-hint" id="hint-compwit">Company witness signature</div></div>
+          <div class="field" style="margin-bottom:8px;"><input type="text" placeholder="Witness full name" style="font-size:13px;" id="sig-compwit-name"/></div>
+          <div class="field" style="margin-bottom:8px;"><input type="date" style="font-size:13px;" id="sig-compwit-date"/></div>
+          <button class="btn-clear-sig" onclick="clearSig('sig-compwit','hint-compwit')">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-banner" id="error-banner">
+      ⚠️ Submission failed. Please check your connection and try again. If the problem persists, contact Mejasan directly.
+    </div>
+
+    <div class="submit-section" id="submit-section">
+      <h3>Ready to Submit</h3>
+      <p>By clicking submit you confirm you have read and agreed to all terms above. A confirmation email will be sent to you and to Mejasan Media Production.</p>
+      <button class="btn btn-primary" style="font-size:13px;padding:15px 48px;" onclick="submitAll()">Submit &amp; Confirm Booking</button>
+    </div>
+
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">✓</div>
+      <h2 id="success-title">Booking Confirmed!</h2>
+      <p id="success-msg" style="max-width:440px;margin:0 auto 10px;">Thank you for choosing Mejasan Media Production. Your questionnaire and signed contract have been received. We look forward to telling your love story beautifully.</p>
+      <p style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-top:16px;">We Deliver Quality</p>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn btn-ghost" onclick="goTab(1)">← Back to Interview Guide</button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>Mejasan Media Production</span> &nbsp;·&nbsp; We Deliver Quality &nbsp;·&nbsp; Nairobi, Kenya
+</footer>
+
+<script>
+// ─── Google Apps Script endpoint ───
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyC12Lhoqr9-gUs1j7s4Aip8lDn-BdiDcHpb-RbF8Frbyb2olUfkKpVbq6-BltEwvKJ/exec';
+
+// ─── Tab navigation ───
+let currentTab = 0;
+function goTab(n) {
+  document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === n));
+  ['np0','np1','np2'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', i === n);
+    if (i < n) el.classList.add('done'); else el.classList.remove('done');
+  });
+  currentTab = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Radio/check highlight ───
+document.querySelectorAll('.radio-opt, .check-opt').forEach(opt => {
+  opt.addEventListener('change', () => {
+    const inp = opt.querySelector('input');
+    if (!inp) return;
+    const name = inp.name;
+    if (name) document.querySelectorAll(`input[name="${name}"]`).forEach(i => {
+      i.closest('.radio-opt, .check-opt')?.classList.toggle('selected', i.checked);
+    });
+  });
+});
+
+// ─── Family rows ───
+function addFamilyRow() {
+  const list = document.getElementById('family-list');
+  const div = document.createElement('div');
+  div.className = 'family-entry';
+  div.innerHTML = `<input type="text" placeholder="Group combination..." class="family-group-input"/><button class="btn-remove" onclick="removeRow(this)" title="Remove">×</button>`;
+  list.appendChild(div);
+  div.querySelector('input').focus();
+}
+function removeRow(btn) {
+  const list = document.getElementById('family-list');
+  if (list.children.length > 1) btn.closest('.family-entry').remove();
+}
+
+// ─── Signature canvas ───
+function initCanvas(id, hintId) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  let drawing = false;
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * (canvas.width / r.width), y: (src.clientY - r.top) * (canvas.height / r.height) };
+  }
+  function start(e) {
+    drawing = true;
+    const p = getPos(e);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    document.getElementById(hintId).style.opacity = '0';
+    e.preventDefault();
+  }
+  function move(e) {
+    if (!drawing) return;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+    e.preventDefault();
+  }
+  function end() { drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function clearSig(id, hintId) {
+  const canvas = document.getElementById(id);
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById(hintId).style.opacity = '1';
+}
+
+['sig-client','sig-witness','sig-company','sig-compwit'].forEach((id, i) => {
+  initCanvas(id, ['hint-client','hint-witness','hint-company','hint-compwit'][i]);
+});
+
+// ─── Helper: get radio value by name ───
+function getRadio(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  return checked ? checked.value : '';
+}
+
+// ─── Helper: check if canvas has been signed ───
+function isCanvasSigned(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return false;
+  const blank = document.createElement('canvas');
+  blank.width = canvas.width;
+  blank.height = canvas.height;
+  return canvas.toDataURL() !== blank.toDataURL();
+}
+
+// ─── Collect all form data ───
+function collectData() {
+  const familyGroups = Array.from(document.querySelectorAll('.family-group-input'))
+    .map(i => i.value.trim()).filter(Boolean).join(' | ');
+
+  return {
+    bride_name:            document.getElementById('bride-name')?.value.trim() || '',
+    groom_name:            document.getElementById('groom-name')?.value.trim() || '',
+    wedding_date:          document.getElementById('wedding-date')?.value || '',
+    theme_colors:          document.getElementById('theme-colors')?.value.trim() || '',
+    wedding_theme:         getRadio('theme'),
+    bride_prep_location:   document.getElementById('bride-prep-location')?.value.trim() || '',
+    groom_prep_location:   document.getElementById('groom-prep-location')?.value.trim() || '',
+    ceremony_venue:        document.getElementById('ceremony-venue')?.value.trim() || '',
+    reception_venue:       document.getElementById('reception-venue')?.value.trim() || '',
+    bride_prep_time:       document.getElementById('bride-prep-time')?.value || '',
+    groom_prep_time:       document.getElementById('groom-prep-time')?.value || '',
+    ceremony_time:         document.getElementById('ceremony-time')?.value || '',
+    reception_time:        document.getElementById('reception-time')?.value || '',
+    end_time:              document.getElementById('end-time')?.value || '',
+    photo_style:           getRadio('photo-style'),
+    video_style:           getRadio('video-style'),
+    style_references:      document.getElementById('style-references')?.value.trim() || '',
+    style_avoid:           document.getElementById('style-avoid')?.value.trim() || '',
+    bride_parents:         document.getElementById('bride-parents')?.value.trim() || '',
+    groom_parents:         document.getElementById('groom-parents')?.value.trim() || '',
+    best_man:              document.getElementById('best-man')?.value.trim() || '',
+    maid_of_honour:        document.getElementById('maid-of-honour')?.value.trim() || '',
+    vip_guests:            document.getElementById('vip-guests')?.value.trim() || '',
+    family_groupings:      familyGroups,
+    highlight_length:      document.getElementById('highlight-length')?.value || '',
+    documentary_edit:      getRadio('docu'),
+    pa_system:             getRadio('pa'),
+    sound_contact:         document.getElementById('sound-contact')?.value.trim() || '',
+    live_performances:     document.getElementById('live-performances')?.value.trim() || '',
+    planner_name:          document.getElementById('planner-name')?.value.trim() || '',
+    planner_contact:       document.getElementById('planner-contact')?.value.trim() || '',
+    mc_name:               document.getElementById('mc-name')?.value.trim() || '',
+    mc_contact:            document.getElementById('mc-contact')?.value.trim() || '',
+    church_coord_name:     document.getElementById('church-coord-name')?.value.trim() || '',
+    church_coord_contact:  document.getElementById('church-coord-contact')?.value.trim() || '',
+    venue_manager_name:    document.getElementById('venue-manager-name')?.value.trim() || '',
+    venue_manager_contact: document.getElementById('venue-manager-contact')?.value.trim() || '',
+    how_you_met:           document.getElementById('how-you-met')?.value.trim() || '',
+    proposal_story:        document.getElementById('proposal-story')?.value.trim() || '',
+    special_songs:         document.getElementById('special-songs')?.value.trim() || '',
+    surprises:             document.getElementById('surprises')?.value.trim() || '',
+    selected_package:      document.getElementById('selected-package')?.value.trim() || '',
+    additional_services:   document.getElementById('additional-services')?.value.trim() || '',
+    delivery_timeline:     getRadio('delivery'),
+    client_email:          document.getElementById('client-email')?.value.trim() || '',
+    contract_event_type:   document.getElementById('contract-event-type')?.value.trim() || '',
+    contract_date:         document.getElementById('contract-date')?.value || '',
+    contract_location:     document.getElementById('contract-location')?.value.trim() || '',
+    contract_cost:         document.getElementById('contract-cost')?.value.trim() || '',
+    contract_client:       document.getElementById('contract-client')?.value.trim() || '',
+    contract_phone:        document.getElementById('contract-phone')?.value.trim() || '',
+    media_consent:         getRadio('consent'),
+    sig_client_name:       document.getElementById('sig-client-name')?.value.trim() || '',
+    sig_client_date:       document.getElementById('sig-client-date')?.value || '',
+    sig_witness_name:      document.getElementById('sig-witness-name')?.value.trim() || '',
+    sig_witness_date:      document.getElementById('sig-witness-date')?.value || '',
+    sig_company_name:      document.getElementById('sig-company-name')?.value.trim() || '',
+    sig_company_date:      document.getElementById('sig-company-date')?.value || '',
+    sig_compwit_name:      document.getElementById('sig-compwit-name')?.value.trim() || '',
+    sig_compwit_date:      document.getElementById('sig-compwit-date')?.value || '',
+    sig_client_signed:     isCanvasSigned('sig-client')  ? 'Yes' : 'No',
+    sig_witness_signed:    isCanvasSigned('sig-witness') ? 'Yes' : 'No',
+    sig_company_signed:    isCanvasSigned('sig-company') ? 'Yes' : 'No',
+    sig_compwit_signed:    isCanvasSigned('sig-compwit') ? 'Yes' : 'No',
+    submitted_at:          new Date().toISOString(),
+  };
+}
+
+// ─── Check for duplicate via GET ───
+// NOTE: GAS doGet must be deployed to handle ?action=checkDuplicate
+// Falls back gracefully (returns false) if check fails — form still submits.
+async function checkForDuplicate(email, date) {
+  try {
+    const url = GAS_URL + '?action=checkDuplicate&email=' + encodeURIComponent(email) + '&date=' + encodeURIComponent(date);
+    const res  = await fetch(url, { method: 'GET' });
+    const json = await res.json();
+    return json.duplicate === true;
+  } catch (_) {
+    // If duplicate check fails (CORS / network), just proceed as new submission
+    return false;
+  }
+}
+
+// ─── Submit using fetch with no-cors (fire-and-forget) ───
+// GAS web apps don't support CORS headers, so we use no-cors mode.
+// We can't read the response in no-cors, so we wait a fixed time then show success.
+async function doSubmit(payload, isCorrection) {
+  const formData = new FormData();
+  formData.append('payload',    JSON.stringify(payload));
+  formData.append('correction', isCorrection ? 'true' : 'false');
+
+  await fetch(GAS_URL, {
+    method:  'POST',
+    mode:    'no-cors',   // Required for GAS — response will be opaque but request goes through
+    body:    formData,
+  });
+  // With no-cors we can't read the response, but the request reaches GAS fine.
+  // We add a short delay to give GAS time to start processing before showing success.
+  return new Promise(resolve => setTimeout(resolve, 2000));
+}
+
+// ─── Main submit handler ───
+async function submitAll() {
+  const errorBanner = document.getElementById('error-banner');
+  const loading     = document.getElementById('loading-overlay');
+  const loadingText = document.getElementById('loading-text');
+  errorBanner.classList.remove('visible');
+
+  // Validate required fields
+  const requiredFields = [
+    { id: 'bride-name',        label: "Bride's Full Name" },
+    { id: 'groom-name',        label: "Groom's Full Name" },
+    { id: 'wedding-date',      label: "Wedding Date" },
+    { id: 'client-email',      label: "Client Email" },
+    { id: 'contract-client',   label: "Contract Client Name" },
+    { id: 'contract-date',     label: "Contract Event Date" },
+    { id: 'contract-location', label: "Contract Location" },
+    { id: 'contract-cost',     label: "Total Cost" },
+    { id: 'contract-phone',    label: "Client Phone" },
+  ];
+  for (const f of requiredFields) {
+    const el = document.getElementById(f.id);
+    if (el && !el.value.trim()) {
+      alert('Please fill in: ' + f.label);
+      el.focus();
+      return;
+    }
+  }
+
+  const email = document.getElementById('client-email').value.trim().toLowerCase();
+  const date  = document.getElementById('wedding-date').value.trim();
+
+  // Step 1: Check for duplicate
+  loadingText.textContent = 'Checking booking records…';
+  loading.classList.add('visible');
+  const isDuplicate = await checkForDuplicate(email, date);
+  loading.classList.remove('visible');
+
+  let isCorrection = false;
+
+  if (isDuplicate) {
+    const choice = await showDuplicateDialog();
+    if (choice === 'cancel') return;
+    if (choice === 'correction') isCorrection = true;
+  }
+
+  // Step 2: Submit
+  loadingText.textContent = 'Submitting your booking…';
+  loading.classList.add('visible');
+
+  try {
+    const payload = collectData();
+    await doSubmit(payload, isCorrection);
+
+    // Show success
+    loading.classList.remove('visible');
+    document.getElementById('submit-section').style.display = 'none';
+
+    const successScreen = document.getElementById('success-screen');
+    if (isCorrection) {
+      document.getElementById('success-title').textContent = 'Booking Updated!';
+      document.getElementById('success-msg').textContent   = 'Your booking has been corrected and updated. New PDFs have been generated and emailed to both parties.';
+    }
+    successScreen.classList.add('visible');
+    window.scrollTo({ top: successScreen.offsetTop - 80, behavior: 'smooth' });
+
+  } catch (err) {
+    loading.classList.remove('visible');
+    errorBanner.classList.add('visible');
+    console.error('Submission error:', err);
+  }
+}
+
+// ─── Duplicate dialog ───
+function showDuplicateDialog() {
+  return new Promise(resolve => {
+    const existing = document.getElementById('dup-dialog');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'dup-dialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,10,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:4px;max-width:460px;width:100%;border-top:3px solid #c9a84c;overflow:hidden;animation:fadeUp 0.25s ease both;">
+        <div style="padding:28px 28px 0;">
+          <div style="font-size:22px;margin-bottom:8px;">⚠️ Existing Booking Found</div>
+          <p style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">A booking already exists for this email address and wedding date. What would you like to do?</p>
+        </div>
+        <div style="padding:0 28px 28px;display:flex;flex-direction:column;gap:10px;">
+          <button id="dup-correct" style="padding:14px 20px;background:#0a0a0a;color:#c9a84c;border:none;border-radius:2px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;font-weight:500;">
+            ✏️  Correct / Update existing booking
+            <span style="display:block;font-size:11px;color:#888;text-transform:none;letter-spacing:0;margin-top:3px;font-weight:400;">Overwrites the previous submission. New PDFs will be sent.</span>
+          </button>
+          <button id="dup-new" style="padding:14px 20px;background:#f4f0e8;color:#1a1a1a;border:1px solid #ddd8ce;border-radius:2px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;font-weight:500;">
+            ➕  Submit as a separate new booking
+            <span style="display:block;font-size:11px;color:#888;text-transform:none;letter-spacing:0;margin-top:3px;font-weight:400;">Keeps the original. Both bookings will exist in the system.</span>
+          </button>
+          <button id="dup-cancel" style="padding:10px 20px;background:none;color:#aaa;border:none;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.08em;">
+            Cancel — go back and check
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    document.getElementById('dup-correct').onclick = () => { overlay.remove(); resolve('correction'); };
+    document.getElementById('dup-new').onclick     = () => { overlay.remove(); resolve('new'); };
+    document.getElementById('dup-cancel').onclick  = () => { overlay.remove(); resolve('cancel'); };
+  });
+}
+</script>
+</body>
+</html>

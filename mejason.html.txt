@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mejason POS</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+:root{--red:#E31E24;--dark:#111;--surface:#1a1a1a;--card:#222;--border:#333;--text:#f0f0f0;--muted:#888;--green:#22c55e;--amber:#f59e0b;--blue:#3b82f6}
+body{background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px}
+.sidebar{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0}
+.logo{padding:16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.logo-icon{width:32px;height:32px;background:var(--red);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0}
+.logo-text{font-size:13px;font-weight:600;line-height:1.2;color:var(--text)}
+.logo-text span{color:var(--red);display:block;font-size:10px;font-weight:400}
+nav{flex:1;padding:8px 0;overflow-y:auto}
+.nav-section{font-size:10px;color:var(--muted);padding:12px 14px 4px;text-transform:uppercase;letter-spacing:.5px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;color:var(--muted);font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-item.active{color:var(--red);border-left-color:var(--red);background:rgba(227,30,36,.08)}
+.nav-item i{font-size:16px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600;flex:1}
+.topbar-date{font-size:12px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:#c0181d}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:rgba(255,255,255,.06)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.content{flex:1;overflow-y:auto;padding:20px}
+.page{display:none}
+.page.active{display:block}
+
+/* Dashboard */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.stat-value{font-size:22px;font-weight:600;line-height:1}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-red{border-top:3px solid var(--red)}
+.stat-green{border-top:3px solid var(--green)}
+.stat-amber{border-top:3px solid var(--amber)}
+.stat-blue{border-top:3px solid var(--blue)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:11px;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-green{background:rgba(34,197,94,.15);color:#4ade80}
+.badge-amber{background:rgba(245,158,11,.15);color:#fbbf24}
+.badge-red{background:rgba(227,30,36,.15);color:#f87171}
+.badge-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+
+/* POS / New Sale */
+.pos-layout{display:grid;grid-template-columns:1fr 340px;gap:16px;height:calc(100vh - 92px)}
+.services-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.service-cats{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto}
+.cat-tab{padding:10px 16px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
+.cat-tab.active{color:var(--red);border-bottom-color:var(--red)}
+.services-list{flex:1;overflow-y:auto;padding:12px}
+.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.service-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s}
+.service-card:hover{border-color:var(--red);background:rgba(227,30,36,.05)}
+.service-name{font-size:12px;font-weight:600;margin-bottom:3px;line-height:1.3}
+.service-desc{font-size:10px;color:var(--muted);margin-bottom:6px;line-height:1.4}
+.service-price{font-size:14px;font-weight:700;color:var(--red)}
+
+/* Cart */
+.cart-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+.cart-header{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.cart-client{padding:10px 14px;border-bottom:1px solid var(--border)}
+.cart-client select,.cart-client input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;margin-top:4px}
+.cart-client label{font-size:11px;color:var(--muted)}
+.cart-items{flex:1;overflow-y:auto;padding:10px 14px}
+.cart-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.cart-item-name{flex:1;font-size:12px;line-height:1.3}
+.cart-item-price{font-size:12px;font-weight:600;color:var(--red);min-width:70px;text-align:right}
+.cart-remove{color:var(--muted);cursor:pointer;font-size:16px;line-height:1}
+.cart-remove:hover{color:#f87171}
+.cart-footer{padding:12px 14px;border-top:1px solid var(--border)}
+.cart-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;color:var(--muted)}
+.cart-total{display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin:8px 0 12px;color:var(--text)}
+.discount-row{display:flex;gap:6px;margin-bottom:10px}
+.discount-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px}
+.payment-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.pay-btn{padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s}
+.pay-btn.selected,.pay-btn:hover{border-color:var(--red);color:var(--red);background:rgba(227,30,36,.08)}
+
+/* Clients */
+.clients-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.client-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border .15s}
+.client-card:hover{border-color:var(--red)}
+.client-avatar{width:40px;height:40px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;margin-bottom:8px}
+.client-name{font-size:13px;font-weight:600}
+.client-info{font-size:11px;color:var(--muted);margin-top:2px}
+.client-stats{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.client-stat{font-size:11px;color:var(--muted)}
+.client-stat strong{display:block;font-size:13px;color:var(--text);font-weight:600}
+
+/* Inventory */
+.inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.inv-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.inv-icon{width:36px;height:36px;border-radius:8px;background:rgba(227,30,36,.12);display:flex;align-items:center;justify-content:center;color:var(--red);margin-bottom:8px;font-size:18px}
+.inv-name{font-size:13px;font-weight:600}
+.inv-count{font-size:22px;font-weight:700;margin:4px 0}
+.inv-status{font-size:11px}
+
+/* Reports */
+.reports-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;transition:all .15s}
+.filter-btn.active,.filter-btn:hover{background:var(--red);border-color:var(--red);color:#fff}
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px}
+.chart-bar{flex:1;background:var(--red);border-radius:3px 3px 0 0;opacity:.85;transition:opacity .15s;cursor:pointer;position:relative;min-width:0}
+.chart-bar:hover{opacity:1}
+.bar-label{font-size:9px;color:var(--muted);text-align:center;margin-top:4px}
+
+/* Invoice modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999;display:none}
+.modal-overlay.show{display:flex}
+.modal{background:#1c1c1c;border:1px solid var(--border);border-radius:12px;width:500px;max-height:80vh;overflow-y:auto}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.modal-body{padding:20px}
+.invoice-brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.invoice-logo{width:40px;height:40px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.invoice-co{font-size:14px;font-weight:700}
+.invoice-co small{display:block;font-size:10px;color:var(--muted);font-weight:400}
+.invoice-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;font-size:12px}
+.inv-field label{color:var(--muted);font-size:10px;display:block;margin-bottom:2px}
+.invoice-items{margin-top:12px}
+.inv-item-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+.invoice-totals{margin-top:10px;font-size:12px}
+.inv-total-row{display:flex;justify-content:space-between;padding:4px 0;color:var(--muted)}
+.inv-grand{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.mpesa-info{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px;margin-top:10px;font-size:11px;color:#4ade80}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">M</div>
+    <div class="logo-text">mejasan<span>Media Production</span></div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+    <div class="nav-item" onclick="nav('pos',this)"><i class="ti ti-shopping-cart"></i> New Sale</div>
+    <div class="nav-section">Management</div>
+    <div class="nav-item" onclick="nav('clients',this)"><i class="ti ti-users"></i> Clients</div>
+    <div class="nav-item" onclick="nav('invoices',this)"><i class="ti ti-file-invoice"></i> Invoices</div>
+    <div class="nav-item" onclick="nav('inventory',this)"><i class="ti ti-package"></i> Inventory</div>
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item" onclick="nav('reports',this)"><i class="ti ti-chart-bar"></i> Reports</div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="nav('settings',this)"><i class="ti ti-settings"></i> Settings</div>
+  </nav>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-date" id="topbar-date"></div>
+    <button class="btn btn-red btn-sm" onclick="nav('pos',document.querySelectorAll('.nav-item')[1])"><i class="ti ti-plus"></i> New Sale</button>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card stat-red"><div class="stat-label">Total Revenue</div><div class="stat-value" id="s-rev">KSh 0</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card stat-amber"><div class="stat-label">Unpaid (Credit)</div><div class="stat-value" id="s-unpaid">KSh 0</div><div class="stat-sub">Outstanding balance</div></div>
+        <div class="stat-card stat-green"><div class="stat-label">Clients</div><div class="stat-value" id="s-clients">5</div><div class="stat-sub">Registered</div></div>
+        <div class="stat-card stat-blue"><div class="stat-label">Transactions</div><div class="stat-value" id="s-tx">0</div><div class="stat-sub">Total invoices</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-receipt" style="color:var(--red)"></i> Recent Transactions</div>
+          <table class="table">
+            <thead><tr><th>Client</th><th>Service</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody id="recent-tx"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px">No transactions yet</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-pie" style="color:var(--red)"></i> Revenue by Category</div>
+          <div id="cat-breakdown" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POS -->
+    <div class="page" id="page-pos">
+      <div class="pos-layout">
+        <div class="services-panel">
+          <div class="service-cats">
+            <div class="cat-tab active" onclick="filterCat('all',this)">All Services</div>
+            <div class="cat-tab" onclick="filterCat('wedding',this)">Wedding</div>
+            <div class="cat-tab" onclick="filterCat('traditional',this)">Traditional</div>
+            <div class="cat-tab" onclick="filterCat('studio',this)">Studio</div>
+            <div class="cat-tab" onclick="filterCat('editing',this)">Editing</div>
+            <div class="cat-tab" onclick="filterCat('equipment',this)">Equipment</div>
+          </div>
+          <div class="services-list">
+            <div class="services-grid" id="services-grid"></div>
+          </div>
+        </div>
+        <div class="cart-panel">
+          <div class="cart-header">
+            <span><i class="ti ti-shopping-cart" style="color:var(--red)"></i> Cart</span>
+            <span style="font-size:11px;color:var(--muted)" id="cart-count">0 items</span>
+          </div>
+          <div class="cart-client">
+            <label>Client</label>
+            <select id="cart-client">
+              <option value="">— Select client —</option>
+              <option>Sarah Wawire</option>
+              <option>James Odhiambo</option>
+              <option>Faith Achieng</option>
+              <option>Peter Otieno</option>
+              <option>Grace Ndung'u</option>
+            </select>
+            <label style="margin-top:6px;display:block">Event Date</label>
+            <input type="date" id="event-date"/>
+          </div>
+          <div class="cart-items" id="cart-items"><div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Add services to get started</div></div>
+          <div class="cart-footer">
+            <div class="cart-row"><span>Subtotal</span><span id="subtotal">KSh 0</span></div>
+            <div class="discount-row">
+              <input type="number" id="discount-pct" placeholder="Discount %" min="0" max="100" oninput="recalc()"/>
+            </div>
+            <div class="cart-row"><span>Discount</span><span id="discount-amt" style="color:#4ade80">- KSh 0</span></div>
+            <div class="cart-total"><span>Total</span><span id="cart-total">KSh 0</span></div>
+            <div class="payment-btns">
+              <button class="pay-btn selected" id="pm-cash" onclick="selectPM('cash')"><i class="ti ti-cash"></i> Cash</button>
+              <button class="pay-btn" id="pm-mpesa" onclick="selectPM('mpesa')"><i class="ti ti-device-mobile"></i> M-Pesa</button>
+              <button class="pay-btn" id="pm-bank" onclick="selectPM('bank')"><i class="ti ti-building-bank"></i> Bank</button>
+              <button class="pay-btn" id="pm-credit" onclick="selectPM('credit')"><i class="ti ti-clock"></i> Credit</button>
+            </div>
+            <button class="btn btn-red" style="width:100%;justify-content:center" onclick="checkout()"><i class="ti ti-check"></i> Complete Sale & Generate Invoice</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <input type="text" placeholder="Search clients…" style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);width:260px;font-size:13px"/>
+        <button class="btn btn-red btn-sm" onclick="addClientPrompt()"><i class="ti ti-plus"></i> Add Client</button>
+      </div>
+      <div class="clients-grid" id="clients-grid"></div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="filter-bar" style="margin:0">
+          <button class="filter-btn active" onclick="filterInv('all',this)">All</button>
+          <button class="filter-btn" onclick="filterInv('paid',this)">Paid</button>
+          <button class="filter-btn" onclick="filterInv('credit',this)">Credit/Unpaid</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">Showing <span id="inv-count">0</span> invoices</div>
+      </div>
+      <div class="card">
+        <table class="table" style="width:100%">
+          <thead><tr><th>Invoice #</th><th>Client</th><th>Services</th><th>Amount</th><th>Payment</th><th>Status</th><th>Date</th><th></th></tr></thead>
+          <tbody id="inv-table"><tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px">No invoices yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="color:var(--muted);font-size:13px">Equipment & resource tracking</span>
+        <button class="btn btn-outline btn-sm"><i class="ti ti-plus"></i> Add Equipment</button>
+      </div>
+      <div class="inv-grid" id="inv-grid"></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="filter-bar">
+        <button class="filter-btn active">Today</button>
+        <button class="filter-btn">This Week</button>
+        <button class="filter-btn">This Month</button>
+        <button class="filter-btn">Custom</button>
+      </div>
+      <div class="stats-grid" style="margin-bottom:16px">
+        <div class="stat-card stat-red"><div class="stat-label">Total Sales</div><div class="stat-value" id="r-sales">KSh 0</div></div>
+        <div class="stat-card stat-amber"><div class="stat-label">Unpaid</div><div class="stat-value" id="r-unpaid">KSh 0</div></div>
+        <div class="stat-card stat-green"><div class="stat-label">Paid</div><div class="stat-value" id="r-paid">KSh 0</div></div>
+        <div class="stat-card stat-blue"><div class="stat-label">Transactions</div><div class="stat-value" id="r-tx">0</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-bar" style="color:var(--red)"></i> Revenue by Service Type</div>
+          <div id="report-bars" style="padding-top:8px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-list" style="color:var(--red)"></i> Top Clients by Revenue</div>
+          <div id="top-clients"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="card" style="max-width:500px">
+        <div class="card-title"><i class="ti ti-building" style="color:var(--red)"></i> Business Info</div>
+        <div style="display:grid;gap:12px;font-size:13px">
+          <div><label style="color:var(--muted);font-size:11px;display:block;margin-bottom:4px">Business Name</label><input value="Mejason Media Production" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:13px"/></div>
+          <div><label style="color:var(--muted);font-size:11px;display:block;margin-bottom:4px">Location</label><input value="Joventure Hotel, 1st Floor, Kibos Rd, Kisumu" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:13px"/></div>
+          <div><label style="color:var(--muted);font-size:11px;display:block;margin-bottom:4px">Phone</label><input value="+254 700 864849 | +254 768 375441" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:13px"/></div>
+          <div><label style="color:var(--muted);font-size:11px;display:block;margin-bottom:4px">M-Pesa Paybill</label><input value="522533 — Account: 7616319" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:13px"/></div>
+          <button class="btn btn-red btn-sm" style="width:fit-content">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Invoice Modal -->
+<div class="modal-overlay" id="invoice-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span><i class="ti ti-file-invoice" style="color:var(--red)"></i> Invoice</span>
+      <button class="btn btn-outline btn-sm" onclick="closeInvoice()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body" id="invoice-body"></div>
+  </div>
+</div>
+
+<script>
+const fmt = n => 'KSh ' + Math.round(n).toLocaleString();
+
+const SERVICES = [
+  // Wedding
+  {id:'w1',cat:'wedding',name:'Wedding Package 1',desc:'2 Photographers, 1 Videographer, Photobook 8x12, 3 Mounted',price:100000},
+  {id:'w2',cat:'wedding',name:'Wedding Package 2',desc:'2 Photographers+Video, HD full event, Personalized Photobook 12x12',price:150000},
+  {id:'w3',cat:'wedding',name:'Wedding Package 3',desc:'2 Photog+Video, 4K, Drone, Signage Book, Trailer, Engagement',price:230000},
+  {id:'w4',cat:'wedding',name:'Wedding Package 4',desc:'3 Videographers, Drone, After Party, 2 Photobooks, 8 Mounts',price:305000},
+  // Traditional
+  {id:'t1',cat:'traditional',name:'Traditional Pkg 1 — Photo',desc:'1 Photographer, Photobook 8x12, 2 A3 mounts',price:25000},
+  {id:'t1b',cat:'traditional',name:'Traditional Pkg 1 — Video',desc:'1 Videographer, HD video, Flash disk + YouTube link',price:30000},
+  {id:'t2',cat:'traditional',name:'Traditional Pkg 2 — Photo',desc:'2 Photographers, Photobook 12x12, 2 A3, 2 A4 mounts',price:40000},
+  {id:'t2b',cat:'traditional',name:'Traditional Pkg 2 — Video',desc:'2 Videographers, 4K, Drone coverage, Flash disk + YouTube',price:70000},
+  // Studio / Photo
+  {id:'s1',cat:'studio',name:'Single Photo',desc:'Standard delivery after 48hrs',price:350},
+  {id:'s2',cat:'studio',name:'Express Photo',desc:'Delivered within 12 hours',price:450},
+  {id:'s3',cat:'studio',name:'Creative Photo',desc:'Delivery within 72 hours',price:500},
+  {id:'s4',cat:'studio',name:'Group Photo (2–3)',desc:'Delivery within 48 hrs',price:400},
+  {id:'s5',cat:'studio',name:'Group Photo (4–6)',desc:'Delivery within 48 hrs',price:500},
+  {id:'s6',cat:'studio',name:'Group Photo (7–10)',desc:'Delivery within 48 hrs',price:800},
+  {id:'s7',cat:'studio',name:'Studio Offer — 10 pics',desc:'Was KSh 3,500',price:3200},
+  {id:'s8',cat:'studio',name:'Studio Offer — 20 pics',desc:'Was KSh 7,000',price:6200},
+  // Mounting
+  {id:'m1',cat:'studio',name:'Photo Mount A1',desc:'A1 size print & mount',price:5500},
+  {id:'m2',cat:'studio',name:'Photo Mount A2',desc:'A2 size print & mount',price:3500},
+  {id:'m3',cat:'studio',name:'Photo Mount A3',desc:'A3 size print & mount',price:2500},
+  {id:'m4',cat:'studio',name:'Photo Mount A4',desc:'A4 size print & mount',price:1500},
+  {id:'m5',cat:'studio',name:'Photo Mount A5',desc:'A5 size print & mount',price:600},
+  // Makeup & Wraps
+  {id:'mk1',cat:'studio',name:'Full Makeup',desc:'Professional full makeup application',price:1800},
+  {id:'mk2',cat:'studio',name:'Half Makeup',desc:'Half makeup application',price:1500},
+  {id:'mk3',cat:'studio',name:'Wraps — Basic',desc:'Starts from KSh 1,000',price:1000},
+  // Editing
+  {id:'e1',cat:'editing',name:'Photo Editing (per 10)',desc:'Professional colour grading & retouching',price:2000},
+  {id:'e2',cat:'editing',name:'Video Editing — Basic',desc:'Full event HD edit, flash disk included',price:8000},
+  {id:'e3',cat:'editing',name:'Video Editing — 4K',desc:'Full 4K colour graded edit',price:15000},
+  {id:'e4',cat:'editing',name:'Wedding Trailer',desc:'Cinematic 3–5 min highlight reel',price:10000},
+  {id:'e5',cat:'editing',name:'YouTube Upload & Link',desc:'Private YouTube link delivery',price:1500},
+  // Equipment Rental
+  {id:'eq1',cat:'equipment',name:'HD Video Camera',desc:'1 day rental',price:3000},
+  {id:'eq2',cat:'equipment',name:'4K Video Camera',desc:'1 day rental',price:5000},
+  {id:'eq3',cat:'equipment',name:'Photography Camera',desc:'1 day rental',price:2500},
+  {id:'eq4',cat:'equipment',name:'Drone',desc:'With operator, 1 day',price:8000},
+  {id:'eq5',cat:'equipment',name:'Photography Lights',desc:'Set of lights, 1 day',price:1500},
+  {id:'eq6',cat:'equipment',name:'Videography Lights',desc:'Set of lights, 1 day',price:2000},
+];
+
+const CLIENTS = [
+  {name:'Sarah Wawire',phone:'+254 712 345 678',email:'sarah@email.com',events:'Wedding',total:75000,paid:0},
+  {name:'James Odhiambo',phone:'+254 723 456 789',email:'james@email.com',events:'Corporate',total:45000,paid:45000},
+  {name:'Faith Achieng',phone:'+254 734 567 890',email:'faith@email.com',events:'Traditional',total:70000,paid:70000},
+  {name:'Peter Otieno',phone:'+254 745 678 901',email:'peter@email.com',events:'Studio',total:12500,paid:12500},
+  {name:"Grace Ndung'u",phone:'+254 756 789 012',email:'grace@email.com',events:'Wedding',total:150000,paid:150000},
+];
+
+const INVENTORY = [
+  {icon:'ti-camera',name:'HD Cameras',total:3,available:2,unit:'units'},
+  {icon:'ti-camera',name:'4K Cameras',total:2,available:1,unit:'units'},
+  {icon:'ti-drone',name:'Drones',total:1,available:1,unit:'units'},
+  {icon:'ti-device-camera',name:'Photography Cameras',total:4,available:3,unit:'units'},
+  {icon:'ti-bulb',name:'Photography Lights',total:6,available:4,unit:'sets'},
+  {icon:'ti-bulb',name:'Video Lights',total:4,available:2,unit:'sets'},
+  {icon:'ti-usb',name:'Flash Disks (64GB)',total:10,available:7,unit:'units'},
+  {icon:'ti-book',name:'Photobooks (8x12)',total:5,available:3,unit:'units'},
+  {icon:'ti-book',name:'Photobooks (12x12)',total:5,available:5,unit:'units'},
+];
+
+let cart = [];
+let payMethod = 'cash';
+let invoices = [];
+let invFilter = 'all';
+let activeCat = 'all';
+
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  const titles = {dashboard:'Dashboard',pos:'New Sale',clients:'Clients',invoices:'Invoices',inventory:'Inventory',reports:'Reports',settings:'Settings'};
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if(page === 'dashboard') renderDashboard();
+  if(page === 'reports') renderReports();
+  if(page === 'invoices') renderInvoices();
+}
+
+function renderServices() {
+  const grid = document.getElementById('services-grid');
+  const filtered = activeCat === 'all' ? SERVICES : SERVICES.filter(s => s.cat === activeCat);
+  grid.innerHTML = filtered.map(s => `
+    <div class="service-card" onclick="addToCart('${s.id}')">
+      <div class="service-name">${s.name}</div>
+      <div class="service-desc">${s.desc}</div>
+      <div class="service-price">${fmt(s.price)}</div>
+    </div>`).join('');
+}
+
+function filterCat(cat, el) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderServices();
+}
+
+function addToCart(id) {
+  const svc = SERVICES.find(s => s.id === id);
+  if(!svc) return;
+  const existing = cart.find(c => c.id === id);
+  if(existing) { existing.qty++; } else { cart.push({...svc, qty:1}); }
+  renderCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  renderCart();
+}
+
+function recalc() {
+  const sub = cart.reduce((a,c) => a + c.price * c.qty, 0);
+  const disc = Math.min(parseFloat(document.getElementById('discount-pct').value)||0, 100);
+  const discAmt = sub * disc / 100;
+  const total = sub - discAmt;
+  document.getElementById('subtotal').textContent = fmt(sub);
+  document.getElementById('discount-amt').textContent = '- ' + fmt(discAmt);
+  document.getElementById('cart-total').textContent = fmt(total);
+  return {sub, discAmt, total};
+}
+
+function renderCart() {
+  const el = document.getElementById('cart-items');
+  document.getElementById('cart-count').textContent = cart.length + ' item' + (cart.length !== 1 ? 's' : '');
+  if(!cart.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Add services to get started</div>'; recalc(); return; }
+  el.innerHTML = cart.map(c => `
+    <div class="cart-item">
+      <div class="cart-item-name">${c.name}<br><span style="font-size:10px;color:var(--muted)">Qty: ${c.qty}</span></div>
+      <div class="cart-item-price">${fmt(c.price * c.qty)}</div>
+      <span class="cart-remove" onclick="removeFromCart('${c.id}')">×</span>
+    </div>`).join('');
+  recalc();
+}
+
+function selectPM(pm) {
+  payMethod = pm;
+  ['cash','mpesa','bank','credit'].forEach(p => {
+    document.getElementById('pm-' + p).classList.toggle('selected', p === pm);
+  });
+}
+
+function checkout() {
+  const client = document.getElementById('cart-client').value;
+  if(!client) { alert('Please select a client.'); return; }
+  if(!cart.length) { alert('Cart is empty.'); return; }
+  const {sub, discAmt, total} = recalc();
+  const disc = parseFloat(document.getElementById('discount-pct').value)||0;
+  const eventDate = document.getElementById('event-date').value;
+  const invNum = 'MMP-' + String(invoices.length + 300 + 1).padStart(3,'0');
+  const inv = {
+    id: invNum, client, items: [...cart], subtotal: sub,
+    discountPct: disc, discountAmt: discAmt, total,
+    payMethod, status: payMethod === 'credit' ? 'Unpaid' : 'Paid',
+    date: new Date().toLocaleDateString('en-KE'), eventDate
+  };
+  invoices.push(inv);
+  showInvoice(inv);
+  cart = [];
+  document.getElementById('discount-pct').value = '';
+  renderCart();
+}
+
+function showInvoice(inv) {
+  const mpesaBlock = inv.payMethod === 'mpesa' ? `<div class="mpesa-info"><i class="ti ti-device-mobile"></i> M-Pesa Paybill: <strong>522533</strong> — Account: <strong>7616319</strong></div>` : '';
+  document.getElementById('invoice-body').innerHTML = `
+    <div class="invoice-brand">
+      <div class="invoice-logo">M</div>
+      <div><div class="invoice-co">Mejason Media Production<small>Joventure Hotel, 1st Floor, Kibos Rd, Kisumu</small></div></div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-field"><label>Invoice #</label>${inv.id}</div>
+      <div class="inv-field"><label>Date</label>${inv.date}</div>
+      <div class="inv-field"><label>Client</label>${inv.client}</div>
+      <div class="inv-field"><label>Event Date</label>${inv.eventDate || '—'}</div>
+      <div class="inv-field"><label>Payment Method</label>${inv.payMethod.toUpperCase()}</div>
+      <div class="inv-field"><label>Status</label><span class="badge ${inv.status==='Paid'?'badge-green':'badge-red'}">${inv.status}</span></div>
+    </div>
+    <div class="invoice-items">
+      ${inv.items.map(i => `<div class="inv-item-row"><span>${i.name} × ${i.qty}</span><span>${fmt(i.price*i.qty)}</span></div>`).join('')}
+    </div>
+    <div class="invoice-totals">
+      <div class="inv-total-row"><span>Subtotal</span><span>${fmt(inv.subtotal)}</span></div>
+      ${inv.discountAmt > 0 ? `<div class="inv-total-row"><span>Discount (${inv.discountPct}%)</span><span style="color:#4ade80">- ${fmt(inv.discountAmt)}</span></div>` : ''}
+      <div class="inv-grand"><span>Total</span><span style="color:var(--red)">${fmt(inv.total)}</span></div>
+    </div>
+    ${mpesaBlock}
+    <div style="text-align:center;font-size:10px;color:var(--muted);margin-top:14px">+254 700 864849 | +254 768 375441 | We Deliver Quality</div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:center">
+      <button class="btn btn-red btn-sm" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+      <button class="btn btn-outline btn-sm" onclick="closeInvoice()">Close</button>
+    </div>
+  `;
+  document.getElementById('invoice-modal').classList.add('show');
+}
+
+function closeInvoice() {
+  document.getElementById('invoice-modal').classList.remove('show');
+  renderDashboard();
+  renderInvoices();
+}
+
+function renderDashboard() {
+  const total = invoices.reduce((a,i) => a + i.total, 0);
+  const unpaid = invoices.filter(i => i.status === 'Unpaid').reduce((a,i) => a + i.total, 0);
+  document.getElementById('s-rev').textContent = fmt(total);
+  document.getElementById('s-unpaid').textContent = fmt(unpaid);
+  document.getElementById('s-tx').textContent = invoices.length;
+
+  const tbody = document.getElementById('recent-tx');
+  if(!invoices.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px">No transactions yet</td></tr>'; }
+  else {
+    tbody.innerHTML = [...invoices].reverse().slice(0,5).map(i => `
+      <tr>
+        <td>${i.client}</td>
+        <td style="color:var(--muted);font-size:11px">${i.items.map(x=>x.name).join(', ').substring(0,40)}…</td>
+        <td style="font-weight:600">${fmt(i.total)}</td>
+        <td><span class="badge ${i.status==='Paid'?'badge-green':'badge-red'}">${i.status}</span></td>
+      </tr>`).join('');
+  }
+
+  const cats = {};
+  invoices.forEach(inv => inv.items.forEach(item => { cats[item.cat] = (cats[item.cat]||0) + item.price*item.qty; }));
+  const catNames = {wedding:'Wedding',traditional:'Traditional',studio:'Studio',editing:'Editing',equipment:'Equipment'};
+  const colors = {wedding:'#E31E24',traditional:'#f59e0b',studio:'#3b82f6',editing:'#22c55e',equipment:'#8b5cf6'};
+  const catEl = document.getElementById('cat-breakdown');
+  const entries = Object.entries(cats);
+  if(!entries.length) { catEl.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">No data yet</div>'; return; }
+  const max = Math.max(...entries.map(e=>e[1]));
+  catEl.innerHTML = entries.map(([cat,val]) => `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${catNames[cat]||cat}</span><span style="color:var(--muted)">${fmt(val)}</span></div>
+      <div style="background:var(--border);border-radius:4px;height:6px"><div style="background:${colors[cat]||'#E31E24'};width:${Math.round(val/max*100)}%;height:6px;border-radius:4px"></div></div>
+    </div>`).join('');
+}
+
+function renderInvoices() {
+  const filtered = invFilter === 'all' ? invoices : invoices.filter(i => invFilter === 'paid' ? i.status === 'Paid' : i.status === 'Unpaid');
+  document.getElementById('inv-count').textContent = filtered.length;
+  const tbody = document.getElementById('inv-table');
+  if(!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px">No invoices</td></tr>'; return; }
+  tbody.innerHTML = [...filtered].reverse().map(i => `
+    <tr>
+      <td style="font-size:11px;color:var(--muted)">${i.id}</td>
+      <td>${i.client}</td>
+      <td style="font-size:11px;color:var(--muted)">${i.items.map(x=>x.name).join(', ').substring(0,35)}…</td>
+      <td style="font-weight:600">${fmt(i.total)}</td>
+      <td style="text-transform:uppercase;font-size:11px">${i.payMethod}</td>
+      <td><span class="badge ${i.status==='Paid'?'badge-green':'badge-red'}">${i.status}</span></td>
+      <td style="color:var(--muted);font-size:11px">${i.date}</td>
+      <td><button class="btn btn-outline btn-sm" onclick='showInvoice(${JSON.stringify(i)})'><i class="ti ti-eye"></i></button></td>
+    </tr>`).join('');
+}
+
+function filterInv(f, el) {
+  invFilter = f;
+  document.querySelectorAll('#page-invoices .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderInvoices();
+}
+
+function renderClients() {
+  const grid = document.getElementById('clients-grid');
+  grid.innerHTML = CLIENTS.map(c => {
+    const initials = c.name.split(' ').map(w=>w[0]).join('').toUpperCase();
+    return `<div class="client-card">
+      <div class="client-avatar">${initials}</div>
+      <div class="client-name">${c.name}</div>
+      <div class="client-info">${c.phone}</div>
+      <div class="client-info">${c.events} events</div>
+      <div class="client-stats">
+        <div class="client-stat"><strong>${fmt(c.total)}</strong>Total</div>
+        <div class="client-stat"><strong style="color:${c.paid<c.total?'#f87171':'#4ade80'}">${fmt(c.total-c.paid)}</strong>Balance</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inv-grid');
+  grid.innerHTML = INVENTORY.map(i => {
+    const avail = i.available;
+    const pct = Math.round(avail/i.total*100);
+    const color = pct > 60 ? '#22c55e' : pct > 30 ? '#f59e0b' : '#E31E24';
+    return `<div class="inv-card">
+      <div class="inv-icon"><i class="ti ${i.icon}"></i></div>
+      <div class="inv-name">${i.name}</div>
+      <div class="inv-count">${avail}<span style="font-size:13px;color:var(--muted);font-weight:400"> / ${i.total} ${i.unit}</span></div>
+      <div class="inv-status"><span style="color:${color}">● </span><span style="color:var(--muted)">${avail > 0 ? avail + ' available' : 'All rented out'}</span></div>
+      <div style="background:var(--border);border-radius:4px;height:4px;margin-top:10px"><div style="background:${color};width:${pct}%;height:4px;border-radius:4px"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderReports() {
+  const total = invoices.reduce((a,i) => a + i.total, 0);
+  const unpaid = invoices.filter(i => i.status === 'Unpaid').reduce((a,i) => a + i.total, 0);
+  document.getElementById('r-sales').textContent = fmt(total);
+  document.getElementById('r-unpaid').textContent = fmt(unpaid);
+  document.getElementById('r-paid').textContent = fmt(total - unpaid);
+  document.getElementById('r-tx').textContent = invoices.length;
+
+  const cats = {};
+  invoices.forEach(inv => inv.items.forEach(item => { cats[item.cat] = (cats[item.cat]||0) + item.price*item.qty; }));
+  const catNames = {wedding:'Wedding',traditional:'Traditional',studio:'Studio',editing:'Editing',equipment:'Equipment'};
+  const all = Object.entries(cats);
+  const max = all.length ? Math.max(...all.map(e=>e[1])) : 1;
+  const barsEl = document.getElementById('report-bars');
+  barsEl.innerHTML = all.length ? all.map(([cat,val]) => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${catNames[cat]||cat}</span><span style="color:var(--muted)">${fmt(val)}</span></div>
+      <div style="background:var(--border);border-radius:4px;height:8px"><div style="background:var(--red);width:${Math.round(val/max*100)}%;height:8px;border-radius:4px"></div></div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">No data yet — complete a sale</div>';
+
+  const clientRev = {};
+  invoices.forEach(inv => { clientRev[inv.client] = (clientRev[inv.client]||0) + inv.total; });
+  const topEl = document.getElementById('top-clients');
+  const sorted = Object.entries(clientRev).sort((a,b) => b[1]-a[1]).slice(0,5);
+  topEl.innerHTML = sorted.length ? sorted.map(([name,val],idx) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <div style="width:24px;height:24px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${idx+1}</div>
+      <div style="flex:1;font-size:13px">${name}</div>
+      <div style="font-size:13px;font-weight:600">${fmt(val)}</div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">No data yet</div>';
+}
+
+function addClientPrompt() {
+  const name = prompt('Client full name:');
+  if(name) { CLIENTS.push({name,phone:'—',email:'—',events:'—',total:0,paid:0}); renderClients(); }
+}
+
+// Init
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+renderServices();
+renderClients();
+renderInventory();
+renderDashboard();
+</script>
+</body>
+</html>
