@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script async src="https://cdn.emailjs.com/dist/email.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
 :root{
@@ -404,12 +405,20 @@ const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 // ── SUPABASE ────────────────────────────────────────────
 let sb = null, useSupabase = false;
 
+// ⚙️ UPDATE THESE WITH YOUR SUPABASE CREDENTIALS
+const SUPABASE_CONFIG = {
+  url: 'https://kqpltwrhzbjfyxkttwzh.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxcGx0d3JoemJqZnl4a3R0d3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNjM0NTYsImV4cCI6MjA5MzkzOTQ1Nn0.rR1t4jtXTCCfooTuczSU-CGNxQKAhgXvFJssatn3a6Y'
+};
+
 window.onload = () => {
-  const saved = localStorage.getItem('mmp_sb');
-  if (saved) {
-    const c = JSON.parse(saved);
-    initSupabase(c.url, c.key);
+  // Auto-connect to Supabase with hardcoded credentials
+  if (SUPABASE_CONFIG.url && SUPABASE_CONFIG.key && !SUPABASE_CONFIG.url.includes('YOUR_')) {
+    initSupabase(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+    localStorage.setItem('mmp_sb', JSON.stringify({ url: SUPABASE_CONFIG.url, key: SUPABASE_CONFIG.key }));
+    showDbBadge(true);
   } else {
+    // Show setup if credentials not configured
     document.getElementById('sb-setup').style.display = 'block';
   }
 };
@@ -471,6 +480,270 @@ async function dbUpdateInvoice(inv) {
 async function dbInsertPayment(p) {
   if (!useSupabase) return;
   await sb.from('payments').upsert({ id: p.id, invoice_id: p.invoiceId, amount: p.amount, method: p.method, note: p.note, paid_at: p.paidAt });
+}
+
+// ── AUTOMATED SENDING SERVICE ────────────────────────────
+// Initialize EmailJS for automatic email sending
+setTimeout(() => {
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init('default_service'); // Replace with your EmailJS public key
+  }
+}, 1000);
+
+// Configuration for automated services
+const SEND_CONFIG = {
+  emailService: true,      // Enable automatic email sending
+  whatsappService: true,   // Enable automatic WhatsApp sending
+  webhookUrl: 'https://hook.integromat.com/...', // Replace with your webhook URL
+};
+
+async function generatePDFAsBlob(htmlContent, filename) {
+  return new Promise((resolve, reject) => {
+    try {
+      const element = document.createElement('div');
+      element.innerHTML = htmlContent;
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      
+      html2pdf()
+        .set({
+          margin: 10,
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+        })
+        .from(element)
+        .toPdf()
+        .output('blob')
+        .then(blob => {
+          document.body.removeChild(element);
+          resolve(blob);
+        })
+        .catch(err => {
+          console.error('PDF generation error:', err);
+          document.body.removeChild(element);
+          reject(err);
+        });
+    } catch (err) {
+      console.error('PDF setup error:', err);
+      reject(err);
+    }
+  });
+}
+
+async function sendInvoiceAutomatedEmail(invId, email, clientName) {
+  try {
+    const inv = invoices.find(i => i.id === invId);
+    if (!inv || !email) { alert('Invoice or email missing'); return false; }
+    
+    const statusMsg = createStatusMessage('📧 Generating PDF...');
+    
+    const htmlContent = buildInvoiceHTML(inv);
+    
+    try {
+      const pdfBlob = await generatePDFAsBlob(htmlContent, `${inv.id}-invoice.pdf`);
+      updateStatusMessage(statusMsg, '📧 Preparing email...');
+      
+      const reader = new FileReader();
+      
+      return new Promise((resolve) => {
+        const timeoutId = setTimeout(() => {
+          console.warn('Email PDF reading timeout');
+          updateStatusMessage(statusMsg, `✗ Timeout - PDF taking too long`);
+          setTimeout(() => statusMsg.remove(), 3000);
+          resolve(false);
+        }, 5000);
+        
+        reader.onload = async () => {
+          clearTimeout(timeoutId);
+          try {
+            const base64PDF = reader.result.split(',')[1];
+            
+            const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
+            const balance = inv.total - totalPaid;
+            const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
+
+            updateStatusMessage(statusMsg, '📤 Sending email...');
+
+            const response = await fetch('/.netlify/functions/send-invoice-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email, clientName, invoice: inv,
+                pdfBase64: base64PDF,
+                totalPaid, balance, statusLabel
+              })
+            });
+            
+            if (response.ok) {
+              updateStatusMessage(statusMsg, `✓ Email sent to ${email}!`);
+              setTimeout(() => statusMsg.remove(), 3000);
+              resolve(true);
+            } else {
+              const errText = await response.text();
+              console.warn('Email send failed:', errText);
+              updateStatusMessage(statusMsg, `✗ Email service unavailable`);
+              setTimeout(() => statusMsg.remove(), 3000);
+              resolve(false);
+            }
+          } catch (err) {
+            console.error('Email send error:', err);
+            updateStatusMessage(statusMsg, `✗ Error: ${err.message}`);
+            setTimeout(() => statusMsg.remove(), 3000);
+            resolve(false);
+          }
+        };
+        
+        reader.onerror = () => {
+          clearTimeout(timeoutId);
+          console.error('FileReader error');
+          updateStatusMessage(statusMsg, `✗ PDF read failed`);
+          setTimeout(() => statusMsg.remove(), 3000);
+          resolve(false);
+        };
+        
+        reader.readAsDataURL(pdfBlob);
+      });
+    } catch (pdfErr) {
+      console.error('PDF generation failed:', pdfErr);
+      updateStatusMessage(statusMsg, `✗ PDF generation failed: ${pdfErr.message}`);
+      setTimeout(() => statusMsg.remove(), 3000);
+      return false;
+    }
+  } catch (err) {
+    console.error('Email error:', err);
+    alert('Error: ' + err.message);
+    return false;
+  }
+}
+
+async function sendInvoiceAutomatedWhatsApp(invId, phone, clientName) {
+  try {
+    const inv = invoices.find(i => i.id === invId);
+    if (!inv || !phone) { alert('Invoice or phone missing'); return false; }
+    
+    const statusMsg = createStatusMessage('📱 Generating PDF...');
+    
+    // Generate PDF
+    const htmlContent = buildInvoiceHTML(inv);
+    
+    try {
+      const pdfBlob = await generatePDFAsBlob(htmlContent, `${inv.id}-invoice.pdf`);
+      updateStatusMessage(statusMsg, '📱 Preparing message...');
+      
+      // Convert PDF to base64
+      const reader = new FileReader();
+      
+      return new Promise((resolve) => {
+        const timeoutId = setTimeout(() => {
+          console.warn('PDF reading timeout');
+          // Fallback: just open WhatsApp without PDF
+          openWhatsAppFallback(phone, clientName, inv);
+          updateStatusMessage(statusMsg, `✓ Opening WhatsApp Web...`);
+          setTimeout(() => statusMsg.remove(), 2000);
+          resolve(false);
+        }, 5000);
+        
+        reader.onload = async () => {
+          clearTimeout(timeoutId);
+          try {
+            const base64PDF = reader.result.split(',')[1];
+            
+            const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
+            const balance = inv.total - totalPaid;
+            const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
+
+            const message = `📋 *MEJASON MEDIA - INVOICE*\n\n` +
+              `*Invoice #:* ${inv.id}\n*Date:* ${inv.date}\n*Client:* ${clientName}\n\n` +
+              `*Total:* ${fmt(inv.total)}\n*Status:* ${statusLabel}\n\n` +
+              `📎 Invoice PDF attached`;
+
+            updateStatusMessage(statusMsg, '📤 Sending via WhatsApp...');
+
+            // Try sending via backend API
+            const response = await fetch('/.netlify/functions/send-whatsapp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: phone.replace(/\D/g, ''),
+                message,
+                pdfBase64: base64PDF,
+                fileName: `${inv.id}-invoice.pdf`
+              })
+            });
+            
+            if (response.ok) {
+              updateStatusMessage(statusMsg, `✓ WhatsApp sent to ${phone}!`);
+              setTimeout(() => statusMsg.remove(), 3000);
+              resolve(true);
+            } else {
+              // Fallback to WhatsApp Web link
+              console.warn('Backend send failed, using WhatsApp Web fallback');
+              updateStatusMessage(statusMsg, `✓ Opening WhatsApp Web...`);
+              openWhatsAppFallback(phone, clientName, inv);
+              setTimeout(() => statusMsg.remove(), 2000);
+              resolve(false);
+            }
+          } catch (err) {
+            console.error('WhatsApp send error:', err);
+            updateStatusMessage(statusMsg, `✓ Opening WhatsApp Web...`);
+            openWhatsAppFallback(phone, clientName, inv);
+            setTimeout(() => statusMsg.remove(), 2000);
+            resolve(false);
+          }
+        };
+        
+        reader.onerror = () => {
+          clearTimeout(timeoutId);
+          console.error('FileReader error');
+          updateStatusMessage(statusMsg, `✓ Opening WhatsApp Web...`);
+          openWhatsAppFallback(phone, clientName, inv);
+          setTimeout(() => statusMsg.remove(), 2000);
+          resolve(false);
+        };
+        
+        reader.readAsDataURL(pdfBlob);
+      });
+    } catch (pdfErr) {
+      console.error('PDF generation failed:', pdfErr);
+      updateStatusMessage(statusMsg, `✓ Opening WhatsApp Web (PDF failed)...`);
+      openWhatsAppFallback(phone, clientName, inv);
+      setTimeout(() => statusMsg.remove(), 2000);
+      return false;
+    }
+  } catch (err) {
+    console.error('WhatsApp error:', err);
+    alert('Error: ' + err.message);
+    return false;
+  }
+}
+
+function openWhatsAppFallback(phone, clientName, inv) {
+  const totalPaid = invPayments(inv.id).reduce((a, p) => a + p.amount, 0);
+  const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
+  
+  const message = `📋 *MEJASON MEDIA - INVOICE*\n\n` +
+    `*Invoice #:* ${inv.id}\n*Date:* ${inv.date}\n*Client:* ${clientName}\n\n` +
+    `*Total:* ${fmt(inv.total)}\n*Status:* ${statusLabel}\n\n` +
+    `📎 Please request invoice PDF if needed.`;
+  
+  const cleanPhone = phone.replace(/\D/g, '');
+  const countryCode = cleanPhone.startsWith('254') ? cleanPhone : '254' + cleanPhone.slice(1);
+  const url = `https://wa.me/${countryCode}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+function createStatusMessage(text) {
+  const msg = document.createElement('div');
+  msg.textContent = text;
+  msg.style.cssText = 'position:fixed;top:20px;right:20px;background:#fff;padding:12px 16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-size:12px';
+  document.body.appendChild(msg);
+  return msg;
+}
+
+function updateStatusMessage(msg, text) {
+  if (msg) msg.textContent = text;
 }
 
 async function loadFromSupabase() {
@@ -1392,136 +1665,13 @@ async function markFullyPaid(id) {
 }
 
 // ── WHATSAPP ─────────────────────────────────────────────
-async function sendInvoiceViaWhatsApp(invId, phone) {
-  const inv = invoices.find(i => i.id === invId);
-  if (!inv || !phone) { alert('Invoice or phone number missing'); return; }
-  
-  // First, download the invoice PDF
-  const el = document.createElement('div');
-  el.innerHTML = buildInvoiceHTML(inv);
-  const fileName = `${inv.id}-invoice.pdf`;
-  
-  // Show status
-  const statusMsg = document.createElement('div');
-  statusMsg.textContent = '📄 Generating PDF...';
-  statusMsg.style.position = 'fixed';
-  statusMsg.style.top = '20px';
-  statusMsg.style.right = '20px';
-  statusMsg.style.background = '#fff';
-  statusMsg.style.padding = '12px 16px';
-  statusMsg.style.borderRadius = '8px';
-  statusMsg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-  statusMsg.style.zIndex = '10000';
-  document.body.appendChild(statusMsg);
-  
-  // Generate and download PDF
-  html2pdf().set({
-    margin: 10,
-    filename: fileName,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-  }).from(el).save().then(() => {
-    statusMsg.textContent = '✓ PDF Downloaded: ' + fileName;
-    
-    const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
-    const balance = inv.total - totalPaid;
-    const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
-
-    const message = `📋 *MEJASON MEDIA - INVOICE*\n\n`
-      + `*Invoice #:* ${inv.id}\n*Date:* ${inv.date}\n*Client:* ${inv.clientName}\n\n`
-      + `*ITEMS:*\n`
-      + inv.items.map(i => `  • ${i.name} (×${i.qty}) = ${fmt(i.price * i.qty)}`).join('\n')
-      + `\n\n*SUMMARY:*\n`
-      + `  Subtotal: ${fmt(inv.subtotal)}\n`
-      + (inv.discountAmt > 0 ? `  Discount (-${inv.discountPct}%): ${fmt(inv.discountAmt)}\n` : '')
-      + `  *Total: ${fmt(inv.total)}*\n`
-      + `  Paid: ${fmt(totalPaid)}\n`
-      + `  Balance: ${fmt(balance)}\n\n`
-      + `*Status:* ${statusLabel}\n\n`
-      + `📎 *Invoice PDF attached above*\n\n`
-      + `📱 M-Pesa Till: 9013189\n`
-      + `🏦 Bank: KCB 1310465029\n`
-      + `📧 Email: mejasanw@gmail.com\n`
-      + `📞 Phone: 0700864849\n\n`
-      + `Thank you for choosing Mejason Media! 🙏`;
-
-    const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-    
-    setTimeout(() => {
-      statusMsg.innerHTML = `✓ PDF Downloaded: <strong>${fileName}</strong><br/><br/>WhatsApp opened below.<br/><br/><span style="font-size:12px;color:#666">👉 Tap the attachment icon to add the downloaded PDF file to your message</span>`;
-      statusMsg.style.right = '20px';
-      statusMsg.style.maxWidth = '300px';
-      statusMsg.style.fontSize = '13px';
-      statusMsg.style.lineHeight = '1.5';
-      setTimeout(() => { statusMsg.remove(); }, 5000);
-    }, 500);
-  }).catch(err => {
-    console.error('PDF generation error:', err);
-    statusMsg.textContent = '❌ Error generating PDF';
-    setTimeout(() => { statusMsg.remove(); }, 3000);
-  });
+async function sendInvoiceViaWhatsApp(invId, phone, clientName) {
+  await sendInvoiceAutomatedWhatsApp(invId, phone, clientName);
 }
 
 // ── EMAIL ────────────────────────────────────────────────
 async function sendInvoiceViaEmail(invId, email, clientName) {
-  const inv = invoices.find(i => i.id === invId);
-  if (!inv || !email) { alert('Invoice or email address missing'); return; }
-  
-  // First, download the invoice PDF
-  const el = document.createElement('div');
-  el.innerHTML = buildInvoiceHTML(inv);
-  const fileName = `${inv.id}-invoice.pdf`;
-  
-  // Show status
-  const statusMsg = document.createElement('div');
-  statusMsg.textContent = '📄 Generating PDF...';
-  statusMsg.style.position = 'fixed';
-  statusMsg.style.top = '20px';
-  statusMsg.style.right = '20px';
-  statusMsg.style.background = '#fff';
-  statusMsg.style.padding = '12px 16px';
-  statusMsg.style.borderRadius = '8px';
-  statusMsg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-  statusMsg.style.zIndex = '10000';
-  document.body.appendChild(statusMsg);
-  
-  // Generate and download PDF
-  html2pdf().set({
-    margin: 10,
-    filename: fileName,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-  }).from(el).save().then(() => {
-    const totalPaid = invPayments(invId).reduce((a, p) => a + p.amount, 0);
-    const balance = inv.total - totalPaid;
-    const statusLabel = totalPaid >= inv.total ? 'PAID' : totalPaid > 0 ? 'PARTIAL' : 'UNPAID';
-
-    const subject = `Invoice ${inv.id} from Mejason Media - ${statusLabel}`;
-    
-    const body = `Dear ${clientName},\n\nPlease find your invoice details below:\n\n📎 INVOICE PDF ATTACHED\n\nINVOICE INFORMATION\n─────────────────────────────────────\nInvoice #: ${inv.id}\nDate: ${inv.date}\nStatus: ${statusLabel}\n\nITEMS\n─────────────────────────────────────\n${inv.items.map(i => `${i.name} (×${i.qty}) ............ ${fmt(i.price * i.qty)}`).join('\n')}\n\nSUMMARY\n─────────────────────────────────────\nSubtotal: ${fmt(inv.subtotal)}\n${inv.discountAmt > 0 ? `Discount (${inv.discountPct}%): -${fmt(inv.discountAmt)}\n` : ''}Total Amount: ${fmt(inv.total)}\nAmount Paid: ${fmt(totalPaid)}\nBalance Due: ${fmt(balance)}\n\nPAYMENT METHODS\n─────────────────────────────────────\n📱 M-Pesa Till Number: 9013189\n🏦 Bank Transfer - KCB Bank\n   Account: 1310465029\n   Account Name: Mejason Media Production\n💳 Credit/Cheque (as agreed)\n\nCONTACT INFORMATION\n─────────────────────────────────────\nPhone: 0700864849 / 0768375441\nEmail: mejasanw@gmail.com\nTax ID: 0771400615\n\nThank you for choosing Mejason Media Production!\n\nBest regards,\nMejason Media Production Team\nKisumu, Kenya`;
-    
-    statusMsg.textContent = '✓ PDF Downloaded: ' + fileName;
-
-    // Use mailto protocol for email client
-    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
-    
-    setTimeout(() => {
-      statusMsg.innerHTML = `✓ PDF Downloaded: <strong>${fileName}</strong><br/><br/>Email client opened below.<br/><br/><span style="font-size:12px;color:#666">👉 Click 'Attach Files' to add the downloaded PDF</span>`;
-      statusMsg.style.right = '20px';
-      statusMsg.style.maxWidth = '300px';
-      statusMsg.style.fontSize = '13px';
-      statusMsg.style.lineHeight = '1.5';
-      setTimeout(() => { statusMsg.remove(); }, 5000);
-    }, 500);
-  }).catch(err => {
-    console.error('PDF generation error:', err);
-    statusMsg.textContent = '❌ Error generating PDF';
-    setTimeout(() => { statusMsg.remove(); }, 3000);
-  });
+  await sendInvoiceAutomatedEmail(invId, email, clientName);
 }
 
 // ── INVOICES PAGE ────────────────────────────────────────
